@@ -1,0 +1,25 @@
+{
+  "name": "dotoribox",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^8.2.0",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "mongoose": "^5.11.11",
+    "mongoose-auto-increment": "^5.0.1",
+    "morgan": "~1.9.1",
+    "multer": "^1.4.2",
+    "pm2": "^4.5.1",
+    "pug": "^3.0.0"
+  },
+  "devDependencies": {
+    "swagger-jsdoc": "^6.0.1",
+    "swagger-ui-express": "^4.1.6"
+  }
+}
