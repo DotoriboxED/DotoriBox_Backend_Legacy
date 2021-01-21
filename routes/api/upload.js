@@ -35,15 +35,15 @@ router.post('/problem/:problemId/choice/:choiceNum',
     },
     upload.single('attachment'),
     async function (req, res) {
-        let problemId = req.params.problemId;
-        let choiceNum = req.params.choiceNum;
-        let file = req.file;
+        const problemId = req.params.problemId;
+        const choiceNum = req.params.choiceNum;
+        const file = req.file;
 
-        let ext = file.originalname.split('.');
-        let filename = req.newFileName + '.' + ext[ext.length - 1];
+        const ext = file.originalname.split('.');
+        const filename = req.newFileName + '.' + ext[ext.length - 1];
 
         try {
-            let picture = await db.Problem.findOne({
+            const picture = await db.Problem.findOne({
                 'id': problemId,
                 'isDeleted': false,
                 'choice.choiceNum': choiceNum,
@@ -71,11 +71,11 @@ router.post('/problem/:problemId/choice/:choiceNum',
 );
 
 router.get('/problem/:problemId/choice/:choiceNum', async function (req, res) {
-    let problemId = req.params.problemId;
-    let choiceNum = req.params.choiceNum;
+    const problemId = req.params.problemId;
+    const choiceNum = req.params.choiceNum;
 
     try {
-        let problem = await db.Problem.findOne({
+        const problem = await db.Problem.findOne({
             'id': problemId,
             'choice.choiceNum': choiceNum
         });
