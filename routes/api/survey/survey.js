@@ -175,7 +175,30 @@ router.put('/:surveyId', async function (req, res) {
 });
 
 router.delete('/:surveyId', async function (req, res) {
-    
+    const surveyId = req.params.surveyId;
+
+    try {
+        const survey = await db.Survey.findOne({
+            surveyId,
+            isDeleted: false
+        });
+
+        const problemIds = survey.problems;
+
+        if (!survey)
+            return res.status(404).send('설문지가 존재하지 않습니다.');
+
+        await db.Survey.updateOne({
+            surveyId,
+            isDeleted: false
+        }, {
+            isDeleted: true
+        });
+
+        res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send(err);
+    }
 });
 
 router.post('/:surveyId/problem', async function (req, res) {

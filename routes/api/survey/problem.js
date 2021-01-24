@@ -3,6 +3,35 @@ const router = express.Router();
 const db = require('../../../models');
 const tool = require('../tool');
 
+router.delete('/:problemId', async function (req, res) {
+    const problemId = req.params.problemId;
+    const content = req.body.content;
+
+    if (!content)
+        return res.status(400).send('content를 입력해 주세요.')
+
+    try {
+        const problem = await db.Problem.findOne({
+            problemId,
+            isDeleted: false
+        });
+
+        if (!problem)
+            return res.status(404).send('문제가 존재하지 않습니다.');
+
+        await db.Problem.updateOne({
+            problemId,
+            isDeleted: false
+        }, {
+            isDeleted: true
+        });
+
+        res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
 router.post('/:problemId/answer', async function (req, res) {
     const content = req.body.content;
     const problemId = req.params.problemId;
@@ -123,6 +152,36 @@ router.put('/:problemId/choice/:choiceNum', async function (req, res) {
             'choice.choiceNum': choiceNum
         }, {
             'choice.$.content': content
+        });
+
+        res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+router.delete('/:problemId/choice/:choiceNum', async function (req, res) {
+    const problemId = req.params.problemId;
+    const choiceNum = req.params.choiceNum;
+
+    try {
+        const choice = await db.Problem.findOne({
+            problemId,
+            isDeleted: false,
+            'choice.choiceNum': choiceNum,
+            'choice.isDeleted': false
+        });
+
+        if (!choice)
+            return res.status(404).send('문제 혹은 문항이 존재하지 않습니다.');
+
+        await db.Problem.updateOne({
+            problemId,
+            isDeleted: false,
+            'choice.choiceNum': choiceNum,
+            'choice.isDeleted': false
+        }, {
+            'choice.$.isDeleted': true
         });
 
         res.sendStatus(200);
