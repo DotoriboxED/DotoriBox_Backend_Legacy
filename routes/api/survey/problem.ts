@@ -88,7 +88,7 @@ router.post('/:problemId/choice', async function (req: Request, res: Response) {
     const problemId: string = req.params.problemId;
     const choiceNum: string = req.body.choiceNum;
     const content: string = req.body.content;
-    const choice: form.choice = {};
+    const choice: form.Choice = {};
 
     if (!choiceNum) return res.status(400).send('choiceNum을 입력해 주세요.');
     if (!content) return res.status(400).send('content를 입력해 주세요.');
@@ -133,28 +133,42 @@ router.post('/:problemId/choice', async function (req: Request, res: Response) {
 router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: Response) {
     const problemId: string = req.params.problemId;
     const choiceNum: string = req.params.choiceNum;
+    const updateNum: string = req.body.choiceNum;
     const content: string = req.body.content;
 
-    if (!content)
-        return res.status(400).send('content를 입력해 주세요.');
+    const update: form.Choice = {};
+
+    if (content) update['choice.$.content'] = content;
+    if (updateNum) update['choice.$.choiceNum'] = updateNum;
+    if (!content && !choiceNum) return res.status(400).send('content 혹은 choiceNum을 입력해 주십시오.');
     
     try {
         const problem = await db.Problem.findOne({
             problemId,
+            isDeleted: false,
             'choice.choiceNum': choiceNum,
-            isDeleted: false
+            'choice.isDelete': false
         });
 
         if (!problem)
             return res.status(404).send('문제 혹은 문항이 존재하지 않습니다.');
 
+        const dup = await db.Problem.findOne({
+            problemId,
+            isDeleted: false,
+            'choice.choiceNum': updateNum,
+            'choice.isDeleted': false
+        });
+
+        if (dup)
+            return res.status(403).send('이미 동일한 번호의 문항이 존재합니다.');
+
         await db.Problem.updateOne({
             problemId,
             isDeleted: false,
-            'choice.choiceNum': choiceNum
-        }, {
-            'choice.$.content': content
-        });
+            'choice.choiceNum': choiceNum,
+            'choice.isDelete': false
+        }, update);
 
         res.sendStatus(200);
     } catch (err) {
