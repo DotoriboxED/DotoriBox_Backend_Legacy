@@ -5,6 +5,46 @@ import form from '../formObj'
 
 const router = express.Router();
 
+router.put('/:problemId', async function (req: Request, res: Response) {
+    const problemId: string = req.params.problemId;
+    const updateId: string = req.body.problemId;
+    const content: string = req.body.content;
+    const update: form.Problem = {};
+
+    if (updateId) update.problemId = updateId;
+    if (content) update.content = content;
+    if (!updateId && !content) return res.status(400).send('updateId 혹은 content를 입력해 주세요.');
+
+    try {
+        const problem = await db.Problem.findOne({
+            id: problemId,
+            isDeleted: false
+        });
+
+        if (!problem)
+            return res.status(404).send('문제가 존재하지 않습니다.');
+
+        if (updateId) {
+            const dup = await db.Problem.findOne({
+                id: updateId,
+                isDeleted: false
+            });
+
+            if (dup)
+                return res.status(403).send('이미 존재하는 번호입니다.');
+        }
+
+        await db.Problem.updateOne({
+            id: problemId,
+            isDeleted: false
+        }, update);
+
+        res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
 router.delete('/:problemId', async function (req: Request, res: Response) {
     const problemId: string = req.params.problemId;
     const content: string = req.body.content;
@@ -153,15 +193,17 @@ router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: R
         if (!problem)
             return res.status(404).send('문제 혹은 문항이 존재하지 않습니다.');
 
-        const dup = await db.Problem.findOne({
-            problemId,
-            isDeleted: false,
-            'choice.choiceNum': updateNum,
-            'choice.isDeleted': false
-        });
-
-        if (dup)
-            return res.status(403).send('이미 동일한 번호의 문항이 존재합니다.');
+        if (updateNum !== undefined) {
+            const dup = await db.Problem.findOne({
+                problemId,
+                isDeleted: false,
+                'choice.choiceNum': updateNum,
+                'choice.isDeleted': false
+            });
+    
+            if (dup)
+                return res.status(403).send('이미 동일한 번호의 문항이 존재합니다.');
+        }
 
         await db.Problem.updateOne({
             problemId,
