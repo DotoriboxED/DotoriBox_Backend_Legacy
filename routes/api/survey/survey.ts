@@ -1,6 +1,7 @@
-const express = require('express');
+import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
+import db from '../../../models';
 const router = express.Router();
-const db = require('../../../models');
 
 /**
  * @swagger
@@ -54,8 +55,8 @@ const db = require('../../../models');
   *             200:
   *                 description: 생성 성공
   */
-router.post('/', async function (req, res) {
-    const name = req.body.name;
+router.post('/', async function (req: Request, res: Response) {
+    const name: string = req.body.name;
 
     if (!name)
         return res.status(400).send('name을 입력해 주세요.');
@@ -111,7 +112,7 @@ router.post('/', async function (req, res) {
   *                                     type: string
   *                                     format: date-time
   */
-router.get('/', async function (req, res) {
+router.get('/', async function (req: Request, res: Response) {
     try {
         const surveys = await db.Survey.find({
             isDeleted: false
@@ -123,8 +124,8 @@ router.get('/', async function (req, res) {
     }
 })
 
-router.get('/:surveyId', async function (req, res) {
-    const surveyId = req.params.surveyId;
+router.get('/:surveyId', async function (req: Request, res: Response) {
+    const surveyId: string = req.params.surveyId;
 
     try {
         const survey = await db.Survey.findOne({
@@ -147,9 +148,9 @@ router.get('/:surveyId', async function (req, res) {
     }
 });
 
-router.put('/:surveyId', async function (req, res) {
-    const surveyId = req.params.surveyId;
-    const name = req.body.name;
+router.put('/:surveyId', async function (req: Request, res: Response) {
+    const surveyId: string = req.params.surveyId;
+    const name: string = req.body.name;
 
     if (!name)
         return res.status(400).send('name을 입력해 주세요.');
@@ -174,16 +175,14 @@ router.put('/:surveyId', async function (req, res) {
     }
 });
 
-router.delete('/:surveyId', async function (req, res) {
-    const surveyId = req.params.surveyId;
+router.delete('/:surveyId', async function (req: Request, res: Response) {
+    const surveyId: string = req.params.surveyId;
 
     try {
         const survey = await db.Survey.findOne({
             surveyId,
             isDeleted: false
         });
-
-        const problemIds = survey.problems;
 
         if (!survey)
             return res.status(404).send('설문지가 존재하지 않습니다.');
@@ -201,10 +200,10 @@ router.delete('/:surveyId', async function (req, res) {
     }
 });
 
-router.post('/:surveyId/problem', async function (req, res) {
-    const surveyId = req.params.surveyId;
-    const content = req.body.content;
-    const problemId = req.body.problemId;
+router.post('/:surveyId/problem', async function (req: Request, res: Response) {
+    const surveyId: string = req.params.surveyId;
+    const content: string = req.body.content;
+    const problemId: string = req.body.problemId;
 
     if (!content)
         return res.status(400).send('content를 입력해 주세요.');
@@ -239,4 +238,4 @@ router.post('/:surveyId/problem', async function (req, res) {
     }
 });
 
-module.exports = router;
+export default router;

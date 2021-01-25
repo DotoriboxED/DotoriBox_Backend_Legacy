@@ -1,11 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../../../models');
-const tool = require('../tool');
+import express, { Request, Response } from 'express';
+import db from '../../../models';
+import tool from '../tool';
+import form from '../formObj'
 
-router.delete('/:problemId', async function (req, res) {
-    const problemId = req.params.problemId;
-    const content = req.body.content;
+const router = express.Router();
+
+router.delete('/:problemId', async function (req: Request, res: Response) {
+    const problemId: string = req.params.problemId;
+    const content: string = req.body.content;
 
     if (!content)
         return res.status(400).send('content를 입력해 주세요.')
@@ -32,11 +34,11 @@ router.delete('/:problemId', async function (req, res) {
     }
 });
 
-router.post('/:problemId/answer', async function (req, res) {
-    const content = req.body.content;
-    const problemId = req.params.problemId;
+router.post('/:problemId/answer', async function (req: Request, res: Response) {
+    const content: string = req.body.content;
+    const problemId: string = req.params.problemId;
 
-    const type = tool.getType(content);
+    const type: string = tool.getType(content);
     if (type != 'Number' && type != 'String' && type != 'Boolean')
         return res.status(403).send('잘못된 입력입니다.');
 
@@ -60,8 +62,8 @@ router.post('/:problemId/answer', async function (req, res) {
     }
 });
 
-router.get('/:problemId/answer', async function (req, res) {
-    const problemId = req.params.problemId;
+router.get('/:problemId/answer', async function (req: Request, res: Response) {
+    const problemId: string = req.params.problemId;
 
     try {
         const problem = await db.Problem.findOne({
@@ -82,11 +84,11 @@ router.get('/:problemId/answer', async function (req, res) {
     }
 });
 
-router.post('/:problemId/choice', async function (req, res) {
-    const problemId = req.params.problemId;
-    const choiceNum = req.body.choiceNum;
-    const content = req.body.content;
-    let choice = {};
+router.post('/:problemId/choice', async function (req: Request, res: Response) {
+    const problemId: string = req.params.problemId;
+    const choiceNum: string = req.body.choiceNum;
+    const content: string = req.body.content;
+    const choice: form.choice = {};
 
     if (!choiceNum) return res.status(400).send('choiceNum을 입력해 주세요.');
     if (!content) return res.status(400).send('content를 입력해 주세요.');
@@ -128,10 +130,10 @@ router.post('/:problemId/choice', async function (req, res) {
     }
 });
 
-router.put('/:problemId/choice/:choiceNum', async function (req, res) {
-    const problemId = req.params.problemId;
-    const choiceNum = req.params.choiceNum;
-    const content = req.body.content;
+router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: Response) {
+    const problemId: string = req.params.problemId;
+    const choiceNum: string = req.params.choiceNum;
+    const content: string = req.body.content;
 
     if (!content)
         return res.status(400).send('content를 입력해 주세요.');
@@ -160,9 +162,9 @@ router.put('/:problemId/choice/:choiceNum', async function (req, res) {
     }
 });
 
-router.delete('/:problemId/choice/:choiceNum', async function (req, res) {
-    const problemId = req.params.problemId;
-    const choiceNum = req.params.choiceNum;
+router.delete('/:problemId/choice/:choiceNum', async function (req: Request, res: Response) {
+    const problemId: string = req.params.problemId;
+    const choiceNum: string = req.params.choiceNum;
 
     try {
         const choice = await db.Problem.findOne({
@@ -190,4 +192,4 @@ router.delete('/:problemId/choice/:choiceNum', async function (req, res) {
     }
 });
 
-module.exports = router;
+export default router;

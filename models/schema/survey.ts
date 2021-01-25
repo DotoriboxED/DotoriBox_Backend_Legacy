@@ -1,4 +1,6 @@
-module.exports = (mongoose, autoIncrement) => {
+import mongoose from 'mongoose';
+
+export default function (autoIncrement: any) {
     const survey = new mongoose.Schema({
         id: {
             type: Number
@@ -14,21 +16,21 @@ module.exports = (mongoose, autoIncrement) => {
             default: false
         },
         problems: [{
-                type: mongoose.ObjectId,
+                type: mongoose.Schema.Types.ObjectId,
                 ref: 'Problem'
             }
         ]
     }, {
         timestamps: true
     });
-
+    
     survey.plugin(autoIncrement.plugin, {
         model: 'survey',
         field: 'id',
         startAt: 1,
         increment: 1
     });
-
+    
     const problem = new mongoose.Schema({
         id: {
             type: Number
@@ -59,8 +61,7 @@ module.exports = (mongoose, autoIncrement) => {
                         default: false
                     },
                     content: { 
-                        type: String, 
-                        required: true 
+                        type: String 
                     },
                     image: {
                         type: String
@@ -69,26 +70,22 @@ module.exports = (mongoose, autoIncrement) => {
             ]
         }
     });
-
+    
     problem.plugin(autoIncrement.plugin, {
         model: 'problem',
         field: 'id',
         startAt: 1,
         increment: 1
     });
-
+    
     const answer = new mongoose.Schema({
-        problemId: mongoose.ObjectId,
-        content: mongoose.Mixed
+        problemId: mongoose.Schema.Types.ObjectId,
+        content: mongoose.Schema.Types.Mixed
     });
-
+    
     const Survey = mongoose.model('Survey', survey);
     const Problem = mongoose.model('Problem', problem);
     const Answer = mongoose.model('Answer', answer);
 
-    return {
-        Survey,
-        Problem,
-        Answer
-    }
-} 
+    return { Survey, Problem, Answer }
+}

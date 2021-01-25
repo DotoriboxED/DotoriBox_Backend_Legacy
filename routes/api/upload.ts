@@ -1,21 +1,22 @@
-const express = require('express');
-const fs = require('fs');
-const multer = require('multer');
-const path = require('path');
-const db = require('../../models');
+import express, { Request, Response } from 'express';
+import fs from 'fs';
+import multer from 'multer';
+import path from 'path';
+import db from '../../models';
+import uuid from 'uuid';
 
 const router = express.Router();
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination: function (req: Request, file: Express.Multer.File, cb: Function) {
         cb(null, 'uploads/')
     },
-    filename: function (req, file, cb) {
+    filename: function (req: Request, file: Express.Multer.File, cb: Function) {
         cb(null, req.newFileName + path.extname(file.originalname));
     }
 });
 
-function fileFilter(res, file, cb) {
-    const extension = file.mimetype.split('/')[0];
+function fileFilter(res: Request, file: Express.Multer.File, cb: Function) {
+    const extension: string = file.mimetype.split('/')[0];
 
     if (extension === 'image') //Check && Upload...
         return cb(null, true);
@@ -29,14 +30,14 @@ const upload = multer({
 });
 
 router.post('/problem/:problemId/choice/:choiceNum', 
-    function (req, file, next) {
-        req.newFileName = Date.now();
+    function (req: Request, file: object, next: Function) {
+        req.newFileName = uuid.v4();
         next();
     },
     upload.single('attachment'),
-    async function (req, res) {
-        const problemId = req.params.problemId;
-        const choiceNum = req.params.choiceNum;
+    async function (req: Request, res: Response) {
+        const problemId: string = req.params.problemId;
+        const choiceNum: string = req.params.choiceNum;
         const file = req.file;
 
         const ext = file.originalname.split('.');
@@ -75,12 +76,10 @@ router.get('/problem/:problemId/choice/:choiceNum', async function (req, res) {
     const choiceNum = req.params.choiceNum;
 
     try {
-        const problem = await db.Problem.findOne({
+        const problem: any = await db.Problem.findOne({
             'id': problemId,
             'choice.choiceNum': choiceNum
         });
-
-        console.log(problem);
 
         if (!problem) return res.status(404).send('존재하지 않는 문제입니다.');
         if (!problem.choice) return res.status(404).send('선택지가 존재하지 않습니다.');
@@ -93,4 +92,4 @@ router.get('/problem/:problemId/choice/:choiceNum', async function (req, res) {
     }
 });
 
-module.exports = router;
+export default router;
