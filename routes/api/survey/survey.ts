@@ -180,7 +180,7 @@ router.delete('/:surveyId', async function (req: Request, res: Response) {
 
     try {
         const survey = await db.Survey.findOne({
-            surveyId,
+            id: surveyId,
             isDeleted: false
         });
 
@@ -188,7 +188,7 @@ router.delete('/:surveyId', async function (req: Request, res: Response) {
             return res.status(404).send('설문지가 존재하지 않습니다.');
 
         await db.Survey.updateOne({
-            surveyId,
+            id: surveyId,
             isDeleted: false
         }, {
             isDeleted: true
@@ -211,14 +211,6 @@ router.post('/:surveyId/problem', async function (req: Request, res: Response) {
         return res.status(400).send('problemId를 입력해 주세요.');
 
     try {
-        const checkProblem = await db.Problem.findOne({
-            problemId,
-            isDeleted: false
-        });
-
-        if (checkProblem)
-            return res.status(403).send('problemId가 중복입니다.');
-
         const problem = await new db.Problem({
             problemId,
             content

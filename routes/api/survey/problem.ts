@@ -80,7 +80,7 @@ router.delete('/:problemId', async function (req: Request, res: Response) {
 
     try {
         const problem = await db.Problem.findOne({
-            problemId,
+            id: problemId,
             isDeleted: false
         });
 
@@ -88,7 +88,7 @@ router.delete('/:problemId', async function (req: Request, res: Response) {
             return res.status(404).send('문제가 존재하지 않습니다.');
 
         await db.Problem.updateOne({
-            problemId,
+            id: problemId,
             isDeleted: false
         }, {
             isDeleted: true
@@ -210,7 +210,7 @@ router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: R
 
     try {
         const problem = await db.Problem.findOne({
-            problemId,
+            id: problemId,
             isDeleted: false,
             'choice.choiceNum': choiceNum,
             'choice.isDelete': false
@@ -221,7 +221,7 @@ router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: R
 
         if (updateNum !== undefined) {
             const dup = await db.Problem.findOne({
-                problemId,
+                id: problemId,
                 isDeleted: false,
                 'choice.choiceNum': updateNum,
                 'choice.isDeleted': false
@@ -232,7 +232,7 @@ router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: R
         }
 
         await db.Problem.updateOne({
-            problemId,
+            id: problemId,
             isDeleted: false,
             'choice.choiceNum': choiceNum,
             'choice.isDelete': false
@@ -250,7 +250,7 @@ router.delete('/:problemId/choice/:choiceNum', async function (req: Request, res
 
     try {
         const choice = await db.Problem.findOne({
-            problemId,
+            id: problemId,
             isDeleted: false,
             'choice.choiceNum': choiceNum,
             'choice.isDeleted': false
@@ -260,7 +260,7 @@ router.delete('/:problemId/choice/:choiceNum', async function (req: Request, res
             return res.status(404).send('문제 혹은 문항이 존재하지 않습니다.');
 
         await db.Problem.updateOne({
-            problemId,
+            id: problemId,
             isDeleted: false,
             'choice.choiceNum': choiceNum,
             'choice.isDeleted': false
