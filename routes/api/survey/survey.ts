@@ -200,6 +200,31 @@ router.delete('/:surveyId', async function (req: Request, res: Response) {
     }
 });
 
+router.post('/:surveyId/recover', async function (req: Request, res: Response) {
+    const surveyId: string = req.params.surveyId;
+
+    try {
+        const survey = await db.Survey.findOne({
+            id: surveyId,
+            isDeleted: true
+        });
+
+        if (!survey)
+            return res.status(404).send('삭제된 해당 문제집이 존재하지 않거나 문제집이 존재하지 않습니다.');
+        
+        await db.Survey.updateOne({
+            id: surveyId,
+            isDeleted: true
+        }, {
+            isDeleted: false
+        });
+
+        return res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
 router.post('/:surveyId/problem', async function (req: Request, res: Response) {
     const surveyId: string = req.params.surveyId;
     const content: string = req.body.content;
