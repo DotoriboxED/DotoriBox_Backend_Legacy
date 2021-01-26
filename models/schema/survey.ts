@@ -7,8 +7,7 @@ export default function (autoIncrement: any) {
         },
         name: {
             type: String,
-            required: true,
-            unique: true
+            required: true
         },                               
         isDeleted: {
             type: Boolean,
