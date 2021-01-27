@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import mongoose from 'mongoose';
 import db from '../../../models';
 const router = express.Router();
 
@@ -250,6 +249,42 @@ router.post('/:surveyId/problem', async function (req: Request, res: Response) {
         });
 
         res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+router.get('/:surveyId/problem/deleted', async function (req: Request, res: Response) {
+    const surveyId: string = req.params.surveyId;
+
+    try {
+        const survey = await db.Survey.find({
+            id: surveyId,
+            isDeleted: true
+        }).populate({
+            path: 'problems',
+            match: {
+                isDeleted: true,
+                'choice.$.isDeleted': false
+            }
+        });
+
+        if (!survey)
+            return res.status(404).send('존재하지 않는 데이터입니다.');
+
+        res.json(survey);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+router.get('/deleted', async function (req: Request, res: Response) {
+    try {
+        const survey = await db.Survey.find({
+            isDeleted: true
+        });
+
+        res.json(survey)
     } catch (err) {
         res.status(500).send(err);
     }

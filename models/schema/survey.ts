@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 export default function (autoIncrement: any) {
     const survey = new mongoose.Schema({
         id: {
-            type: Number
+            type: Number,
+            unique: true
         },
         name: {
             type: String,
@@ -32,7 +33,8 @@ export default function (autoIncrement: any) {
     
     const problem = new mongoose.Schema({
         id: {
-            type: Number
+            type: Number,
+            unique: true
         },
         problemId: {
             type: Number,

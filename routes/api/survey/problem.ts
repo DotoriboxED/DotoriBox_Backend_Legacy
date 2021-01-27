@@ -196,6 +196,30 @@ router.post('/:problemId/choice', async function (req: Request, res: Response) {
     }
 });
 
+router.get('/:problemId/choice/deleted', async function (req: Request, res: Response) {
+    const problemId: string = req.params.problemId;
+
+    try {
+        const problem = await db.Problem.findOne({
+            id: problemId,
+            isDeleted: false
+        });
+
+        if (!problem)
+            return res.status(404).send('삭제된 문제가 아니거나 존재하지 않는 문제입니다.');
+
+        const choice = await db.Problem.find({
+            id: problemId,
+            isDeleted: false,
+            'choice.isDeleted': true
+        });
+
+        res.json(choice);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
 router.post('/:problemId/recover', async function (req: Request, res: Response) {
     const problemId: string = req.params.problemId;
 
