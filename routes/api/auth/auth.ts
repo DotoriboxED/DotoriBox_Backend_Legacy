@@ -14,7 +14,7 @@ const router = Router();
 const opts = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: 'dotori'
-}
+};
 
 passport.use(
     'local',
@@ -130,7 +130,7 @@ router.get('/signup/kakao/callback', async function (req: Request, res: Response
 });
 
 router.post('/login/naver', async function (req: Request, res: Response) {
-    res.redirect('https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=' + 'CQEpYnn5NxtHx7l2Frsd' +
+    res.redirect('https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=' + process.env.NAVER_CLIENT_ID +
         '&state=' + 'dotoribox' + '&redirect_uri=http://localhost:3000/api/auth/login/naver/callback');
 });
 
@@ -141,8 +141,8 @@ router.get('/login/naver/callback', async function (req: Request, res: Response)
         const token = await axios.post('https://nid.naver.com/oauth2.0/token', {}, {
             params: {
                 grant_type: 'authorization_code',
-                client_id: 'CQEpYnn5NxtHx7l2Frsd',
-                client_secret: 'ejWGv08EUp',
+                client_id: process.env.NAVER_CLIENT_ID,
+                client_secret: process.env.NAVER_CLIENT_SECRET,
                 code: code,
                 state: state
             }
