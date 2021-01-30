@@ -6,7 +6,8 @@ import db from '../../../models';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import path from 'path'
+import path from 'path';
+import qs from 'qs';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') })
 
@@ -180,6 +181,80 @@ router.get('/login/naver/callback', async function (req: Request, res: Response)
             });
         }
 
+        if (user.isBlocked)
+            return res.status(403).send('접근이 제한된 계정입니다.');
+
+        const payload = {
+            _id: user?._id,
+            level: user?.level
+        }
+
+        const userToken = await jwt.sign(payload, 'dotori', { expiresIn: 3600 });
+        const response = {
+            success: true,
+            token: 'Bearer ' + userToken
+        }
+        res.json(response);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+router.post('/login/google', async function(req: Request, res: Response) {
+    const AUTHORIZE_URI = "https://accounts.google.com/o/oauth2/v2/auth";
+    const queryStr = qs.stringify({
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        redirect_uri: 'http://localhost:3000/api/auth/login/google/callback',
+        response_type: 'code',
+        scope: 'profile email openid',
+        access_type: 'offline'
+    });
+
+    res.redirect(AUTHORIZE_URI + '?' + queryStr);
+});
+
+router.get('/login/google/callback', async function (req: Request, res: Response) {
+    const { code, scope } = req.query;
+
+    try {
+        const token = await axios.post('https://oauth2.googleapis.com/token', {}, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            params: {
+                client_id: process.env.GOOGLE_CLIENT_ID,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                code: code,
+                grant_type: 'authorization_code',
+                redirect_uri: 'http://localhost:3000/api/auth/login/google/callback'
+            }
+        });
+
+        const userData = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: {
+                'Authorization': 'Bearer ' + token.data.access_token
+            }
+        });
+
+        const { email, name, picture } = userData.data;
+
+        
+        let user: any = await db.User.find({
+            email
+        });
+
+        if (!user) {
+            await db.User.create({
+                email,
+                name,
+                profilePic: picture
+            })
+
+            user = await db.User.find({
+                email
+            });
+        }
+        
         if (user.isBlocked)
             return res.status(403).send('접근이 제한된 계정입니다.');
 
