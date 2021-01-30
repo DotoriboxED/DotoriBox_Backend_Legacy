@@ -3,9 +3,12 @@ import express, { Request, Response } from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
+import dotenv from 'dotenv';
+import passport from 'passport';
 // var swaggerUi = require('swagger-ui-express');
 // var swaggerJsdoc = require('swagger-jsdoc');
 // var swaggerOption = require('./swagger');
+
 
 import indexRouter from './routes/index';
 import usersRouter from './routes/users';
@@ -13,6 +16,7 @@ import apiRouter from './routes/api/index';
 // var specs = swaggerJsdoc(swaggerOption);
 
 const app = express();
+dotenv.config({ path: path.join(process.cwd(), '.env') })
 
 // view engine setup
 app.set('views', path.join(process.cwd(), 'views'));
@@ -24,6 +28,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(process.cwd(), 'public')));
 
+app.use(passport.initialize());
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api', apiRouter);

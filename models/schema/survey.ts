@@ -88,5 +88,9 @@ export default function (autoIncrement: any) {
     const Problem = mongoose.model('Problem', problem);
     const Answer = mongoose.model('Answer', answer);
 
-    return { Survey, Problem, Answer }
+    return { 
+        Survey, 
+        Problem, 
+        Answer 
+    }
 }

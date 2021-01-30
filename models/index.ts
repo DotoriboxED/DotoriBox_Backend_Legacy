@@ -4,7 +4,8 @@ import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment'
 import dotenv from 'dotenv';
 import path from 'path';
-import surveySchema from './schema/survey'
+import surveySchema from './schema/survey';
+import userSchema from './schema/user';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') })
 
@@ -16,6 +17,6 @@ mongoose.connect(process.env.MONGO_URI as string, { useNewUrlParser: true, useUn
 autoIncrement.initialize(mongoose.connection);
 
 // const surveySchema = require('./schema/survey')(mongoose, autoIncrement);
-const db = Object.assign({}, surveySchema(autoIncrement));
+const db = Object.assign({}, surveySchema(autoIncrement), userSchema());
 
 export default db;

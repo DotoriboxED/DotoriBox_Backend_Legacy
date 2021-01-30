@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import passport from 'passport';
 import db from '../../../models';
 const router = express.Router();
 
@@ -111,8 +112,10 @@ router.post('/', async function (req: Request, res: Response) {
   *                                     type: string
   *                                     format: date-time
   */
-router.get('/', async function (req: Request, res: Response) {
+router.get('/', passport.authenticate('local', { session: false }), async function (req: Request, res: Response) {
     try {
+        console.log(req.user);
+
         const surveys = await db.Survey.find({
             isDeleted: false
         });
