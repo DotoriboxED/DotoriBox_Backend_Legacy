@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 export default function () {
     const user = new mongoose.Schema({
-        username: {
+        name: {
             type: String
         },
         password: {
@@ -36,7 +36,7 @@ export default function () {
         profilePic: {
             type: String
         },
-        phoneNumber: {
+        phoneNum: {
             type: String
         }
     });

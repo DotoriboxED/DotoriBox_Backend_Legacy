@@ -36,7 +36,7 @@ passport.use(
 );
 
 router.post('/signup/local', async function (req: Request, res: Response) {
-    const { username, password, email, isMan, Birthday } = req.body;
+    const { name, password, email, isMan, Birthday } = req.body;
 
     try {
         const userCheck = await db.User.findOne({
@@ -49,7 +49,7 @@ router.post('/signup/local', async function (req: Request, res: Response) {
         const cryptPassword = bcrypt.hashSync(password, 7);
 
         await db.User.create({
-            username,
+            name,
             password: cryptPassword,
             email,
             isMan,
@@ -64,7 +64,7 @@ router.post('/signup/local', async function (req: Request, res: Response) {
 
 router.post('/signup/kakao', async function (req: Request, res: Response) {
     res.redirect('https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=' + process.env.KAKAO_REST_KEY
-                + '&redirect_uri=' + 'http://localhost:3000/api/auth/signup/kakao/callback');
+        + '&redirect_uri=' + 'http://localhost:3000/api/auth/signup/kakao/callback');
 });
 
 router.get('/signup/kakao/callback', async function (req: Request, res: Response) {
@@ -86,9 +86,7 @@ router.get('/signup/kakao/callback', async function (req: Request, res: Response
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
         });
-
         const { email } = data.data.kakao_account;
-        console.log(data.data);
 
         let user: any = await db.User.findOne({
             email
@@ -131,12 +129,82 @@ router.get('/signup/kakao/callback', async function (req: Request, res: Response
     }
 });
 
+router.post('/login/naver', async function (req: Request, res: Response) {
+    res.redirect('https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=' + 'CQEpYnn5NxtHx7l2Frsd' +
+        '&state=' + 'dotoribox' + '&redirect_uri=http://localhost:3000/api/auth/login/naver/callback');
+});
+
+router.get('/login/naver/callback', async function (req: Request, res: Response) {
+    const { code, state } = req.query;
+
+    try {
+        const token = await axios.post('https://nid.naver.com/oauth2.0/token', {}, {
+            params: {
+                grant_type: 'authorization_code',
+                client_id: 'CQEpYnn5NxtHx7l2Frsd',
+                client_secret: 'ejWGv08EUp',
+                code: code,
+                state: state
+            }
+        });
+
+        const userData = await axios.post('https://openapi.naver.com/v1/nid/me', {}, {
+            headers: {
+                'Authorization': 'Bearer ' + token.data.access_token,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+
+        const { profile_image, gender, email, mobile, name } = userData.data.response;
+
+        let user: any = await db.User.findOne({
+            email
+        });
+
+        if (!user) {
+            let isMan = false;
+            if (gender === 'M')
+                isMan = true;
+
+            await db.User.create({
+                email,
+                name,
+                isMan,
+                phoneNum: mobile,
+                profilePic: profile_image,
+                Birthday: '1998-12-04'
+            });
+
+            user = await db.User.find({
+                email
+            });
+        }
+
+        if (user.isBlocked)
+            return res.status(403).send('접근이 제한된 계정입니다.');
+
+        const payload = {
+            _id: user?._id,
+            level: user?.level
+        }
+
+        const userToken = await jwt.sign(payload, 'dotori', { expiresIn: 3600 });
+        const response = {
+            success: true,
+            token: 'Bearer ' + userToken
+        }
+        res.json(response);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
 router.post('/signin/local', async function (req: Request, res: Response) {
     const { password, email } = req.body;
 
     try {
         const user: any = await db.User.findOne({
-            email  
+            email
         });
 
         const comparePassword = bcrypt.compareSync(user.password, password);
