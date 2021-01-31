@@ -239,7 +239,7 @@ router.get('/login/google/callback', async function (req: Request, res: Response
         const { email, name, picture } = userData.data;
 
         
-        let user: any = await db.User.find({
+        let user: any = await db.User.findOne({
             email
         });
 
@@ -247,7 +247,9 @@ router.get('/login/google/callback', async function (req: Request, res: Response
             await db.User.create({
                 email,
                 name,
-                profilePic: picture
+                profilePic: picture,
+                Birthday: '1998-12-04',
+                isMan: true
             })
 
             user = await db.User.find({
