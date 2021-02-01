@@ -1,4 +1,4 @@
-import express, { Router, Request, Response } from 'express';
+import express, { Router, Request, Response, query } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
@@ -64,8 +64,14 @@ router.post('/signup/local', async function (req: Request, res: Response) {
 });
 
 router.post('/signup/kakao', async function (req: Request, res: Response) {
-    res.redirect('https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=' + process.env.KAKAO_REST_KEY
-        + '&redirect_uri=' + 'http://localhost:3000/api/auth/signup/kakao/callback');
+    const AUTHORIZE_URI = 'https://kauth.kakao.com/oauth/authorize?';
+    const queryStr = qs.stringify({
+        response_type: 'code',
+        client_id: process.env.KAKAO_REST_KEY,
+        redirect_uri: 'http://localhost:3000/api/auth/signup/kakao/callback'
+    })
+
+    res.redirect(AUTHORIZE_URI + queryStr);
 });
 
 router.get('/signup/kakao/callback', async function (req: Request, res: Response) {
@@ -131,8 +137,15 @@ router.get('/signup/kakao/callback', async function (req: Request, res: Response
 });
 
 router.post('/login/naver', async function (req: Request, res: Response) {
-    res.redirect('https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=' + process.env.NAVER_CLIENT_ID +
-        '&state=' + 'dotoribox' + '&redirect_uri=http://localhost:3000/api/auth/login/naver/callback');
+    const AUTHORIZE_URI = 'https://nid.naver.com/oauth2.0/authorize?';
+    const queryStr = await qs.stringify({
+        response_type: 'code',
+        client_id: process.env.NAVER_CLIENT_ID,
+        state: 'dotoribox',
+        redirect_uri: 'http://localhost:3000/api/auth/login/naver/callback'
+    });
+
+    res.redirect(AUTHORIZE_URI + queryStr);
 });
 
 router.get('/login/naver/callback', async function (req: Request, res: Response) {
