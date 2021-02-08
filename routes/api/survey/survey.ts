@@ -128,7 +128,7 @@ router.get('/', async function (req: Request, res: Response) {
     } catch (err) {
         res.status(500).send(err);
     }
-})
+});
 
 router.get('/:surveyId', async function (req: Request, res: Response) {
     const surveyId: string = req.params.surveyId;
@@ -137,12 +137,6 @@ router.get('/:surveyId', async function (req: Request, res: Response) {
         const survey = await db.Survey.findOne({
             id: surveyId,
             isDeleted: false
-        }).populate({
-            path: 'problems',
-            match: {
-                isDeleted: false,
-                'choice.$.isDeleted': false
-            }
         });
 
         if (!survey)
@@ -153,6 +147,21 @@ router.get('/:surveyId', async function (req: Request, res: Response) {
         res.status(500).send(err);
     }
 });
+
+router.get('/:surveyId/problem', async function (req: Request, res: Response) {
+    const { surveyId } = req.params;
+
+    try {
+        const problems = await db.Problem.find({
+            surveyId,
+            isDeleted: false
+        });
+
+        res.json(problems);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+})
 
 router.put('/:surveyId', async function (req: Request, res: Response) {
     const surveyId: string = req.params.surveyId;
@@ -242,18 +251,11 @@ router.post('/:surveyId/problem', async function (req: Request, res: Response) {
         return res.status(400).send('problemId를 입력해 주세요.');
 
     try {
-        const problem = await new db.Problem({
+        await new db.Problem({
             problemId,
+            surveyId,
             content
         }).save();
-
-        await db.Survey.updateOne({
-            id: surveyId
-        }, {
-            $push: {
-                problems: problem._id
-            }
-        });
 
         res.sendStatus(200);
     } catch (err) {
@@ -266,20 +268,19 @@ router.get('/:surveyId/problem/deleted', async function (req: Request, res: Resp
 
     try {
         const survey = await db.Survey.find({
-            id: surveyId,
-            isDeleted: true
-        }).populate({
-            path: 'problems',
-            match: {
-                isDeleted: true,
-                'choice.$.isDeleted': false
-            }
+            surveyId,
+            isDeleted: false
         });
 
         if (!survey)
             return res.status(404).send('존재하지 않는 데이터입니다.');
 
-        res.json(survey);
+        const deleted = await db.Problem.find({
+            surveyId,
+            isDeleted: true
+        })
+
+        res.json(deleted);
     } catch (err) {
         res.status(500).send(err);
     }

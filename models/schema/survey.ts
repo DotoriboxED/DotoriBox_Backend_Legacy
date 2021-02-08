@@ -14,12 +14,7 @@ export default function (autoIncrement: any) {
             type: Boolean,
             required: true,
             default: false
-        },
-        problems: [{
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Problem'
-            }
-        ]
+        }
     }, {
         timestamps: true
     });
@@ -38,6 +33,10 @@ export default function (autoIncrement: any) {
         },
         problemId: {
             type: Number,
+            required: true
+        },
+        boardId: {
+            type: mongoose.Types.ObjectId,
             required: true
         },
         isDeleted: {
