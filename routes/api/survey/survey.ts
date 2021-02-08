@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import passport from 'passport';
 import db from '../../../models';
+import authCheck from '../auth/authChecker';
 const router = express.Router();
 
 /**
@@ -55,8 +56,11 @@ const router = express.Router();
   *             200:
   *                 description: 생성 성공
   */
-router.post('/', async function (req: Request, res: Response) {
+router.post('/', authCheck, async function (req: Request, res: Response) {
     const name: string = req.body.name;
+
+    if (!req.user || req.user.level < 30)
+        return res.sendStatus(404);
 
     if (!name)
         return res.status(400).send('name을 입력해 주세요.');
@@ -112,7 +116,7 @@ router.post('/', async function (req: Request, res: Response) {
   *                                     type: string
   *                                     format: date-time
   */
-router.get('/', passport.authenticate('local', { session: false }), async function (req: Request, res: Response) {
+router.get('/', async function (req: Request, res: Response) {
     try {
         console.log(req.user);
 

@@ -69,7 +69,7 @@ router.post('/signup/kakao', async function (req: Request, res: Response) {
         response_type: 'code',
         client_id: process.env.KAKAO_REST_KEY,
         redirect_uri: 'http://localhost:3000/api/auth/signup/kakao/callback'
-    })
+    });
 
     res.redirect(AUTHORIZE_URI + queryStr);
 });
@@ -122,13 +122,13 @@ router.get('/signup/kakao/callback', async function (req: Request, res: Response
         const payload = {
             _id: user?._id,
             level: user?.level
-        }
+        };
 
         const userToken = await jwt.sign(payload, 'dotori', { expiresIn: 3600 });
         const response = {
             success: true,
             token: 'Bearer ' + userToken
-        }
+        };
         res.json(response);
     } catch (err) {
         console.log(err);
@@ -200,13 +200,13 @@ router.get('/login/naver/callback', async function (req: Request, res: Response)
         const payload = {
             _id: user?._id,
             level: user?.level
-        }
+        };
 
         const userToken = await jwt.sign(payload, 'dotori', { expiresIn: 3600 });
         const response = {
             success: true,
             token: 'Bearer ' + userToken
-        }
+        };
         res.json(response);
     } catch (err) {
         res.status(500).send(err);
@@ -263,7 +263,7 @@ router.get('/login/google/callback', async function (req: Request, res: Response
                 profilePic: picture,
                 Birthday: '1998-12-04',
                 isMan: true
-            })
+            });
 
             user = await db.User.find({
                 email
@@ -276,13 +276,13 @@ router.get('/login/google/callback', async function (req: Request, res: Response
         const payload = {
             _id: user?._id,
             level: user?.level
-        }
+        };
 
         const userToken = await jwt.sign(payload, 'dotori', { expiresIn: 3600 });
         const response = {
             success: true,
             token: 'Bearer ' + userToken
-        }
+        };
         res.json(response);
     } catch (err) {
         res.status(500).send(err);
@@ -313,7 +313,7 @@ router.post('/signin/local', async function (req: Request, res: Response) {
         const response = {
             success: true,
             token: 'Bearer ' + token
-        }
+        };
         res.json(response);
     } catch (err) {
         res.status(500).send(err);

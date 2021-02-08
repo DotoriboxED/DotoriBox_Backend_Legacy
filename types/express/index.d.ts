@@ -1,5 +1,8 @@
 declare namespace Express {
     interface Request {
-        newFileName?: string
+        newFileName?: string,
+        user?: {
+            level: number
+        }
     }
 }
