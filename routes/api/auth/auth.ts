@@ -316,6 +316,7 @@ router.post('/signin/local', async function (req: Request, res: Response) {
         };
         res.json(response);
     } catch (err) {
+        console.log(err);
         res.status(500).send(err);
     }
 });

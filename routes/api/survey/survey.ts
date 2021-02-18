@@ -60,7 +60,7 @@ router.post('/', authCheck, async function (req: Request, res: Response) {
     const name: string = req.body.name;
 
     if (!req.user || req.user.level < 30)
-        return res.sendStatus(404);
+        return res.status(404).send('권한이 부족합니다.');
 
     if (!name)
         return res.status(400).send('name을 입력해 주세요.');
@@ -117,14 +117,22 @@ router.post('/', authCheck, async function (req: Request, res: Response) {
   *                                     format: date-time
   */
 router.get('/', async function (req: Request, res: Response) {
+    const { isDeleted } = req.query;
+
     try {
-        console.log(req.user);
+        if (!isDeleted) {
+            const surveys = await db.Survey.find({
+                isDeleted: false
+            });
 
-        const surveys = await db.Survey.find({
-            isDeleted: false
-        });
+            res.json(surveys);
+        } else {
+            const surveys = await db.Survey.find({
+                isDeleted: true
+            });
 
-        res.json(surveys);
+            res.json(surveys);
+        }
     } catch (err) {
         res.status(500).send(err);
     }
@@ -150,14 +158,31 @@ router.get('/:surveyId', async function (req: Request, res: Response) {
 
 router.get('/:surveyId/problem', async function (req: Request, res: Response) {
     const { surveyId } = req.params;
+    const { isDeleted } = req.query;
 
     try {
-        const problems = await db.Problem.find({
-            surveyId,
-            isDeleted: false
+        const survey: any = await db.Survey.findOne({
+            id: surveyId
         });
 
-        res.json(problems);
+        if (!survey || survey.isDeleted)
+            return res.status(404).send('문제집이 존재하지 않습니다.');
+
+        if (!isDeleted) {
+            const problems = await db.Problem.find({
+                surveyId,
+                isDeleted: false
+            });
+    
+            res.json(problems);
+        } else {
+            const problems = await db.Problem.find({
+                surveyId,
+                isDeleted: true
+            });
+    
+            res.json(problems);
+        }
     } catch (err) {
         res.status(500).send(err);
     }
@@ -176,7 +201,15 @@ router.put('/:surveyId', async function (req: Request, res: Response) {
         });
 
         if (!survey)
-            return res.status(400).send('존재하지 않는 설문지입니다.');
+            return res.status(404).send('존재하지 않는 설문지입니다.');
+
+        const sameName = await db.Survey.findOne({
+            name,
+            isDeleted: false
+        });
+
+        if (sameName)
+            return res.status(403).send('이미 존재하는 문제집 이름입니다.');
 
         await db.Survey.updateOne({
             id: surveyId
@@ -184,7 +217,7 @@ router.put('/:surveyId', async function (req: Request, res: Response) {
             name: name
         });
 
-        return res.sendStatus(200);
+        res.sendStatus(200);
     } catch (err) {
         res.status(500).send(err);
     }
@@ -215,7 +248,7 @@ router.delete('/:surveyId', async function (req: Request, res: Response) {
     }
 });
 
-router.post('/:surveyId/recover', async function (req: Request, res: Response) {
+router.put('/:surveyId/recover', async function (req: Request, res: Response) {
     const surveyId: string = req.params.surveyId;
 
     try {
@@ -251,6 +284,15 @@ router.post('/:surveyId/problem', async function (req: Request, res: Response) {
         return res.status(400).send('problemId를 입력해 주세요.');
 
     try {
+        const Problem = await db.Problem.findOne({
+            problemId,
+            surveyId,
+            isDeleted: false
+        });
+
+        if (Problem)
+            return res.status(403).send('이미 존재하는 문항입니다.');
+
         await new db.Problem({
             problemId,
             surveyId,
@@ -258,41 +300,6 @@ router.post('/:surveyId/problem', async function (req: Request, res: Response) {
         }).save();
 
         res.sendStatus(200);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-router.get('/:surveyId/problem/deleted', async function (req: Request, res: Response) {
-    const surveyId: string = req.params.surveyId;
-
-    try {
-        const survey = await db.Survey.find({
-            surveyId,
-            isDeleted: false
-        });
-
-        if (!survey)
-            return res.status(404).send('존재하지 않는 데이터입니다.');
-
-        const deleted = await db.Problem.find({
-            surveyId,
-            isDeleted: true
-        })
-
-        res.json(deleted);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-router.get('/deleted', async function (req: Request, res: Response) {
-    try {
-        const survey = await db.Survey.find({
-            isDeleted: true
-        });
-
-        res.json(survey)
     } catch (err) {
         res.status(500).send(err);
     }

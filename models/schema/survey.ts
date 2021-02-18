@@ -35,8 +35,8 @@ export default function (autoIncrement: any) {
             type: Number,
             required: true
         },
-        boardId: {
-            type: mongoose.Types.ObjectId,
+        surveyId: {
+            type: Number,
             required: true
         },
         isDeleted: {
