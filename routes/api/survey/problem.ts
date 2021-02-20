@@ -5,6 +5,7 @@ import uuid from 'uuid';
 import db from '../../../models';
 import tool from '../tool';
 import form from '../formObj'
+import { unlink } from 'fs/promises';
 
 const router = express.Router();
 
@@ -396,7 +397,7 @@ router.put('/:problemId/choice/:choiceNum/recover', async function (req: Request
     }
 });
 
-router.post('/:problemId/choice/:choiceNum/upload',
+router.post('/:problemId/choice/:choiceNum/pic',
     function (req: Request, file: object, next: Function) {
         req.newFileName = uuid.v4();
         next();
@@ -418,15 +419,19 @@ router.post('/:problemId/choice/:choiceNum/upload',
                 'choice.isDeleted': false
             });
 
-            if (!picture)
+            if (!picture) {
+                await unlink('./uploads/' + filename);
                 return res.status(404).send('해당하는 질문 혹은 문항이 존재하지 않습니다.');
+            }
 
             const survey: any = await db.Survey.findOne({
                 id: picture.surveyId
-            })
+            });
 
-            if (!survey || survey.isDeleted)
+            if (!survey || survey.isDeleted) {
+                await unlink('./uploads/' + filename);
                 return res.status(404).send('존재하지 않는 설문지입니다.');
+            }
 
 
             await db.Problem.updateOne({
@@ -472,7 +477,101 @@ router.get('/:problemId/choice/:choiceNum/pic', async function (req: Request, re
 
         res.download('./uploads/' + problem.choice[0].image, problem.choice[0].image);
     } catch (err) {
-        console.log(err);
+        res.status(500).send(err);
+    }
+});
+
+router.put('/:problemId/choice/:choiceNum/pic',
+    function (req: Request, file: object, next: Function) {
+        req.newFileName = uuid.v4();
+        next();
+    },
+    upload.single('attachment'),
+    async function (req: Request, res: Response) {
+        const problemId: string = req.params.problemId;
+        const choiceNum: string = req.params.choiceNum;
+        const file = req.file;
+
+        const ext = file.originalname.split('.');
+        const filename = req.newFileName + '.' + ext[ext.length - 1];
+
+        try {
+            const picture: any = await db.Problem.findOne({
+                'id': problemId,
+                'isDeleted': false,
+                'choice.choiceNum': choiceNum,
+                'choice.isDeleted': false
+            });
+
+            if (!picture) {
+                await unlink('./uploads/' + filename);
+                return res.status(404).send('해당하는 질문 혹은 문항이 존재하지 않습니다.');
+            }
+
+            const survey: any = await db.Survey.findOne({
+                id: picture.surveyId
+            });
+
+            if (!survey || survey.isDeleted) {
+                await unlink('./uploads/' + filename);
+                return res.status(404).send('존재하지 않는 설문지입니다.');
+            }
+
+            await unlink('./uploads/' + picture.choice[0].image);
+
+            await db.Problem.updateOne({
+                'id': problemId,
+                'choice.choiceNum': choiceNum,
+                'choice.isDeleted': false
+            }, {
+                $set: {
+                    'choice.$.image': filename
+                }
+            });
+
+            res.sendStatus(200);
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    }
+);
+
+router.delete('/:problemId/choice/:choiceNum/pic', async function (req: Request, res: Response) {
+    const problemId: string = req.params.problemId;
+    const choiceNum: string = req.params.choiceNum;
+
+    try {
+        const picture: any = await db.Problem.findOne({
+            'id': problemId,
+            'isDeleted': false,
+            'choice.choiceNum': choiceNum,
+            'choice.isDeleted': false
+        });
+
+        if (!picture)
+            return res.status(404).send('해당하는 질문 혹은 문항이 존재하지 않습니다.');
+
+        const survey: any = await db.Survey.findOne({
+            id: picture.surveyId
+        });
+
+        if (!survey || survey.isDeleted)
+            return res.status(404).send('존재하지 않는 설문지입니다.');
+
+        await unlink('./uploads/' + picture.choice[0].image);
+
+        await db.Problem.updateOne({
+            'id': problemId,
+            'choice.choiceNum': choiceNum,
+            'choice.isDeleted': false
+        }, {
+            $unset: {
+                'choice.$.image': picture.choice[0].image
+            }
+        });
+
+        res.sendStatus(200);
+    } catch (err) {
         res.status(500).send(err);
     }
 });
