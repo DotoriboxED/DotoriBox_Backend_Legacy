@@ -5,7 +5,9 @@ import uuid from 'uuid';
 import db from '../../../models';
 import tool from '../tool';
 import form from '../formObj'
+import sendErrorResponse from '../error';
 import { unlink } from 'fs/promises';
+import { send } from 'process';
 
 const router = express.Router();
 
@@ -40,7 +42,7 @@ router.put('/:problemId', async function (req: Request, res: Response) {
 
     if (updateId) update.problemId = updateId;
     if (content) update.content = content;
-    if (!updateId && !content) return res.status(400).send('updateId 혹은 content를 입력해 주세요.');
+    if (!updateId && !content) return sendErrorResponse(res, 400, 'invalid_input');
 
     try {
         const problem: any = await db.Problem.findOne({
@@ -49,14 +51,14 @@ router.put('/:problemId', async function (req: Request, res: Response) {
         });
 
         if (!problem)
-            return res.status(404).send('문제가 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'problem_not_exist');
 
         const survey: any = await db.Survey.findOne({
             id: problem.surveyId
         });
 
         if (!survey || survey.isDeleted)
-            return res.status(404).send('설문지가 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         if (updateId) {
             const dup = await db.Problem.findOne({
@@ -65,7 +67,7 @@ router.put('/:problemId', async function (req: Request, res: Response) {
             });
 
             if (dup)
-                return res.status(403).send('이미 존재하는 번호입니다.');
+                return sendErrorResponse(res, 403, 'number_already_exists');
         }
 
         await db.Problem.updateOne({
@@ -75,7 +77,7 @@ router.put('/:problemId', async function (req: Request, res: Response) {
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -84,7 +86,7 @@ router.delete('/:problemId', async function (req: Request, res: Response) {
     const content: string = req.body.content;
 
     if (!content)
-        return res.status(400).send('content를 입력해 주세요.')
+        return sendErrorResponse(res, 400, 'content_not_exists');
 
     try {
         const problem: any = await db.Problem.findOne({
@@ -93,7 +95,7 @@ router.delete('/:problemId', async function (req: Request, res: Response) {
         });
 
         if (!problem)
-            return res.status(404).send('문제가 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'problem_not_exists');
 
         const survey = await db.Survey.findOne({
             id: problem.surveyId,
@@ -101,7 +103,7 @@ router.delete('/:problemId', async function (req: Request, res: Response) {
         });
 
         if (!survey)
-            return res.status(404).send('문제집이 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         await db.Problem.updateOne({
             id: problemId,
@@ -112,7 +114,7 @@ router.delete('/:problemId', async function (req: Request, res: Response) {
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -122,7 +124,7 @@ router.post('/:problemId/answer', async function (req: Request, res: Response) {
 
     const type: string = tool.getType(content);
     if (type != 'Number' && type != 'String' && type != 'Boolean')
-        return res.status(403).send('잘못된 입력입니다.');
+        return sendErrorResponse(res, 403, 'invalid_input');
 
     try {
         const problem = await db.Problem.findOne({
@@ -131,7 +133,7 @@ router.post('/:problemId/answer', async function (req: Request, res: Response) {
         });
 
         if (!problem)
-            return res.status(404).send('존재하지 않는 문제입니다.');
+            return sendErrorResponse(res, 404, 'problem_not_exists');
 
         await new db.Answer({
             problemId: problem._id,
@@ -140,7 +142,7 @@ router.post('/:problemId/answer', async function (req: Request, res: Response) {
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -154,7 +156,7 @@ router.get('/:problemId/answer', async function (req: Request, res: Response) {
         });
 
         if (!problem)
-            return res.status(404).send('존재하지 않는 문제입니다.');
+            return sendErrorResponse(res, 404, 'problem_not_exists');
 
         const answer = await db.Answer.find({
             problemId: problem._id
@@ -162,7 +164,7 @@ router.get('/:problemId/answer', async function (req: Request, res: Response) {
 
         res.json(answer);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -182,7 +184,7 @@ router.post('/:problemId/choice', async function (req: Request, res: Response) {
         });
 
         if (!problem)
-            return res.status(404).send('존재하지 않는 문제입니다.');
+            return sendErrorResponse(res, 404, 'problem_not_exists');
 
         const choiceCheck = await db.Problem.findOne({
             id: problemId,
@@ -192,7 +194,7 @@ router.post('/:problemId/choice', async function (req: Request, res: Response) {
         });
 
         if (choiceCheck)
-            return res.status(403).send('이미 있는 choiceNum입니다.');
+            return sendErrorResponse(res, 403, 'number_already_exists')
 
         choice.content = content;
         choice.choiceNum = choiceNum;
@@ -208,7 +210,7 @@ router.post('/:problemId/choice', async function (req: Request, res: Response) {
 
         return res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -222,7 +224,7 @@ router.get('/:problemId/choice/deleted', async function (req: Request, res: Resp
         });
 
         if (!problem)
-            return res.status(404).send('삭제된 문제가 아니거나 존재하지 않는 문제입니다.');
+            return sendErrorResponse(res, 404, 'problem_not_exists');
 
         const choice = await db.Problem.find({
             id: problemId,
@@ -232,7 +234,7 @@ router.get('/:problemId/choice/deleted', async function (req: Request, res: Resp
 
         res.json(choice);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -246,14 +248,14 @@ router.put('/:problemId/recover', async function (req: Request, res: Response) {
         });
 
         if (!problem)
-            return res.status(404).send('삭제된 해당 문제가 존재하지 않거나 문제가 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'problem_not_exists');
 
         const survey: any = await db.Survey.findOne({
             id: problem.surveyId
         })
 
         if (!survey || survey.isDeleted)
-            return res.status(404).send('존재하지 않는 설문지입니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         await db.Problem.updateOne({
             id: problemId,
@@ -264,7 +266,7 @@ router.put('/:problemId/recover', async function (req: Request, res: Response) {
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -278,7 +280,7 @@ router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: R
 
     if (content) update['choice.$.content'] = content;
     if (updateNum) update['choice.$.choiceNum'] = updateNum;
-    if (!content && !choiceNum) return res.status(400).send('content 혹은 choiceNum을 입력해 주십시오.');
+    if (!content && !choiceNum) return sendErrorResponse(res, 400, 'invalid_input');
 
     try {
         const problem: any = await db.Problem.findOne({
@@ -289,14 +291,14 @@ router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: R
         });
 
         if (!problem)
-            return res.status(404).send('문제 혹은 문항이 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'pc_not_exists');
 
         const survey: any = await db.Survey.findOne({
             id: problem.surveyId
         })
 
         if (!survey || survey.isDeleted)
-            return res.status(404).send('존재하지 않는 설문지입니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         if (updateNum !== undefined) {
             const dup = await db.Problem.findOne({
@@ -307,7 +309,7 @@ router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: R
             });
 
             if (dup)
-                return res.status(403).send('이미 동일한 번호의 문항이 존재합니다.');
+                return sendErrorResponse(res, 403, 'number_already_exists');
         }
 
         await db.Problem.updateOne({
@@ -319,7 +321,7 @@ router.put('/:problemId/choice/:choiceNum', async function (req: Request, res: R
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -336,14 +338,14 @@ router.delete('/:problemId/choice/:choiceNum', async function (req: Request, res
         });
 
         if (!choice)
-            return res.status(404).send('문제 혹은 문항이 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'pc_not_exists');
 
         const survey: any = await db.Survey.findOne({
             id: choice.surveyId
         })
 
         if (!survey || survey.isDeleted)
-            return res.status(404).send('존재하지 않는 설문지입니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         await db.Problem.updateOne({
             id: problemId,
@@ -356,7 +358,7 @@ router.delete('/:problemId/choice/:choiceNum', async function (req: Request, res
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -373,14 +375,14 @@ router.put('/:problemId/choice/:choiceNum/recover', async function (req: Request
         });
 
         if (!choice)
-            return res.status(404).send('삭제된 문항이 존재하지 않거나 문제 혹은 문항이 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'pc_not_exists');
 
         const survey: any = await db.Survey.findOne({
             id: choice.surveyId
         })
 
         if (!survey || survey.isDeleted)
-            return res.status(404).send('존재하지 않는 설문지입니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         await db.Problem.updateOne({
             id: problemId,
@@ -393,7 +395,7 @@ router.put('/:problemId/choice/:choiceNum/recover', async function (req: Request
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -421,7 +423,7 @@ router.post('/:problemId/choice/:choiceNum/pic',
 
             if (!picture) {
                 await unlink('./uploads/' + filename);
-                return res.status(404).send('해당하는 질문 혹은 문항이 존재하지 않습니다.');
+                return sendErrorResponse(res, 404, 'pc_not_exists');
             }
 
             const survey: any = await db.Survey.findOne({
@@ -430,7 +432,7 @@ router.post('/:problemId/choice/:choiceNum/pic',
 
             if (!survey || survey.isDeleted) {
                 await unlink('./uploads/' + filename);
-                return res.status(404).send('존재하지 않는 설문지입니다.');
+                return sendErrorResponse(res, 404, 'survey_not_exists');
             }
 
 
@@ -446,7 +448,7 @@ router.post('/:problemId/choice/:choiceNum/pic',
 
             res.sendStatus(200);
         } catch (err) {
-            res.status(500).send(err);
+            sendErrorResponse(res, 500, 'unknown_error', err);
         }
     }
 );
@@ -462,22 +464,22 @@ router.get('/:problemId/choice/:choiceNum/pic', async function (req: Request, re
         });
 
         if (!problem)
-            return res.status(404).send('문제 혹은 문항이 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'pc_not_exists');
 
         const survey: any = await db.Survey.findOne({
             id: problem.surveyId
         })
 
         if (!survey || survey.isDeleted)
-            return res.status(404).send('존재하지 않는 설문지입니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
-        if (!problem) return res.status(404).send('존재하지 않는 문제입니다.');
-        if (!problem.choice) return res.status(404).send('선택지가 존재하지 않습니다.');
-        if (!problem.choice[0].image) return res.status(404).send('이미지가 존재하지 않습니다.');
+        if (!problem) return sendErrorResponse(res, 404, 'problem_not_exists');
+        if (!problem.choice) return sendErrorResponse(res, 404, 'choice_not_exists');
+        if (!problem.choice[0].image) return sendErrorResponse(res, 404, 'image_not_exists');
 
         res.download('./uploads/' + problem.choice[0].image, problem.choice[0].image);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -505,7 +507,7 @@ router.put('/:problemId/choice/:choiceNum/pic',
 
             if (!picture) {
                 await unlink('./uploads/' + filename);
-                return res.status(404).send('해당하는 질문 혹은 문항이 존재하지 않습니다.');
+                return sendErrorResponse(res, 404, 'pc_not_exists');
             }
 
             const survey: any = await db.Survey.findOne({
@@ -514,7 +516,7 @@ router.put('/:problemId/choice/:choiceNum/pic',
 
             if (!survey || survey.isDeleted) {
                 await unlink('./uploads/' + filename);
-                return res.status(404).send('존재하지 않는 설문지입니다.');
+                return sendErrorResponse(res, 404, 'survey_not_exists');
             }
 
             await unlink('./uploads/' + picture.choice[0].image);
@@ -531,7 +533,7 @@ router.put('/:problemId/choice/:choiceNum/pic',
 
             res.sendStatus(200);
         } catch (err) {
-            res.status(500).send(err);
+            sendErrorResponse(res, 500, 'unknown_error', err);
         }
     }
 );
@@ -549,14 +551,14 @@ router.delete('/:problemId/choice/:choiceNum/pic', async function (req: Request,
         });
 
         if (!picture)
-            return res.status(404).send('해당하는 질문 혹은 문항이 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'pc_not_exists');
 
         const survey: any = await db.Survey.findOne({
             id: picture.surveyId
         });
 
         if (!survey || survey.isDeleted)
-            return res.status(404).send('존재하지 않는 설문지입니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         await unlink('./uploads/' + picture.choice[0].image);
 
@@ -572,7 +574,7 @@ router.delete('/:problemId/choice/:choiceNum/pic', async function (req: Request,
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 

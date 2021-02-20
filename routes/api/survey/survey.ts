@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import passport from 'passport';
 import db from '../../../models';
 import authCheck from '../auth/authChecker';
+import sendErrorResponse from '../error';
 const router = express.Router();
 
 /**
@@ -60,10 +61,10 @@ router.post('/', authCheck, async function (req: Request, res: Response) {
     const name: string = req.body.name;
 
     if (!req.user || req.user.level < 30)
-        return res.status(404).send('권한이 부족합니다.');
+        return sendErrorResponse(res, 403, 'less_level');
 
     if (!name)
-        return res.status(400).send('name을 입력해 주세요.');
+        return sendErrorResponse(res, 400, 'name_not_exists');
 
     try {
         const surveyCheck = await db.Survey.findOne({
@@ -72,7 +73,7 @@ router.post('/', authCheck, async function (req: Request, res: Response) {
         });
 
         if (surveyCheck)
-            return res.status(403).send('이미 설문지가 존재합니다.');
+            return sendErrorResponse(res, 403, 'survey_already_exists');
 
         await new db.Survey({
             name: name
@@ -80,7 +81,7 @@ router.post('/', authCheck, async function (req: Request, res: Response) {
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -134,7 +135,7 @@ router.get('/', async function (req: Request, res: Response) {
             res.json(surveys);
         }
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -148,11 +149,11 @@ router.get('/:surveyId', async function (req: Request, res: Response) {
         });
 
         if (!survey)
-            return res.status(403).send('존재하지 않는 설문지입니다.');
+            return sendErrorResponse(res, 403, 'survey_not_exists');
 
         res.json(survey);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -166,7 +167,7 @@ router.get('/:surveyId/problem', async function (req: Request, res: Response) {
         });
 
         if (!survey || survey.isDeleted)
-            return res.status(404).send('문제집이 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         if (!isDeleted) {
             const problems = await db.Problem.find({
@@ -184,7 +185,7 @@ router.get('/:surveyId/problem', async function (req: Request, res: Response) {
             res.json(problems);
         }
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 })
 
@@ -193,7 +194,7 @@ router.put('/:surveyId', async function (req: Request, res: Response) {
     const name: string = req.body.name;
 
     if (!name)
-        return res.status(400).send('name을 입력해 주세요.');
+        return sendErrorResponse(res, 400, 'name_not_exists');
 
     try {
         const survey = await db.Survey.findOne({
@@ -201,7 +202,7 @@ router.put('/:surveyId', async function (req: Request, res: Response) {
         });
 
         if (!survey)
-            return res.status(404).send('존재하지 않는 설문지입니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         const sameName = await db.Survey.findOne({
             name,
@@ -209,7 +210,7 @@ router.put('/:surveyId', async function (req: Request, res: Response) {
         });
 
         if (sameName)
-            return res.status(403).send('이미 존재하는 문제집 이름입니다.');
+            return sendErrorResponse(res, 403, 'survey_already_exists');
 
         await db.Survey.updateOne({
             id: surveyId
@@ -219,7 +220,7 @@ router.put('/:surveyId', async function (req: Request, res: Response) {
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -233,7 +234,7 @@ router.delete('/:surveyId', async function (req: Request, res: Response) {
         });
 
         if (!survey)
-            return res.status(404).send('설문지가 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
 
         await db.Survey.updateOne({
             id: surveyId,
@@ -244,7 +245,7 @@ router.delete('/:surveyId', async function (req: Request, res: Response) {
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -258,7 +259,7 @@ router.put('/:surveyId/recover', async function (req: Request, res: Response) {
         });
 
         if (!survey)
-            return res.status(404).send('삭제된 해당 문제집이 존재하지 않거나 문제집이 존재하지 않습니다.');
+            return sendErrorResponse(res, 404, 'survey_not_exists');
         
         await db.Survey.updateOne({
             id: surveyId,
@@ -269,7 +270,7 @@ router.put('/:surveyId/recover', async function (req: Request, res: Response) {
 
         return res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
@@ -279,9 +280,9 @@ router.post('/:surveyId/problem', async function (req: Request, res: Response) {
     const problemId: string = req.body.problemId;
 
     if (!content)
-        return res.status(400).send('content를 입력해 주세요.');
+        return sendErrorResponse(res, 400, 'content_not_exists');
     if (!problemId)
-        return res.status(400).send('problemId를 입력해 주세요.');
+        return sendErrorResponse(res, 400, 'problemId_not_exists');
 
     try {
         const Problem = await db.Problem.findOne({
@@ -291,7 +292,7 @@ router.post('/:surveyId/problem', async function (req: Request, res: Response) {
         });
 
         if (Problem)
-            return res.status(403).send('이미 존재하는 문항입니다.');
+            return sendErrorResponse(res, 403, 'problem_already_exists');
 
         await new db.Problem({
             problemId,
@@ -301,7 +302,7 @@ router.post('/:surveyId/problem', async function (req: Request, res: Response) {
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
 
