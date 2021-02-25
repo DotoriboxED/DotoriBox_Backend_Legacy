@@ -63,7 +63,7 @@ router.post('/signup/local', async function (req: Request, res: Response) {
     }
 });
 
-router.post('/signup/kakao', async function (req: Request, res: Response) {
+router.post('/login/kakao', async function (req: Request, res: Response) {
     const AUTHORIZE_URI = 'https://kauth.kakao.com/oauth/authorize?';
     const queryStr = qs.stringify({
         response_type: 'code',
@@ -74,8 +74,8 @@ router.post('/signup/kakao', async function (req: Request, res: Response) {
     res.redirect(AUTHORIZE_URI + queryStr);
 });
 
-router.get('/signup/kakao/callback', async function (req: Request, res: Response) {
-    const { code } = req.query;
+router.post('/login/kakao/token', async function (req: Request, res: Response) {
+    const { code } = req.body;
 
     try {
         const token = await axios.post('https://kauth.kakao.com/oauth/token', {}, {
@@ -148,8 +148,8 @@ router.post('/login/naver', async function (req: Request, res: Response) {
     res.redirect(AUTHORIZE_URI + queryStr);
 });
 
-router.get('/login/naver/callback', async function (req: Request, res: Response) {
-    const { code, state } = req.query;
+router.post('/login/naver/token', async function (req: Request, res: Response) {
+    const { code, state } = req.body;
 
     try {
         const token = await axios.post('https://nid.naver.com/oauth2.0/token', {}, {
@@ -226,7 +226,7 @@ router.post('/login/google', async function(req: Request, res: Response) {
     res.redirect(AUTHORIZE_URI + '?' + queryStr);
 });
 
-router.get('/login/google/callback', async function (req: Request, res: Response) {
+router.post('/login/google/token', async function (req: Request, res: Response) {
     const { code, scope } = req.query;
 
     try {
@@ -289,7 +289,7 @@ router.get('/login/google/callback', async function (req: Request, res: Response
     }
 });
 
-router.post('/signin/local', async function (req: Request, res: Response) {
+router.post('/login/local', async function (req: Request, res: Response) {
     const { password, email } = req.body;
 
     try {
