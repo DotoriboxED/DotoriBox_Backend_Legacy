@@ -7,7 +7,6 @@ import tool from '../tool';
 import form from '../formObj'
 import sendErrorResponse from '../error';
 import { unlink } from 'fs/promises';
-import { send } from 'process';
 
 const router = express.Router();
 
@@ -136,7 +135,7 @@ router.post('/:problemId/answer', async function (req: Request, res: Response) {
             return sendErrorResponse(res, 404, 'problem_not_exists');
 
         await new db.Answer({
-            problemId: problem._id,
+            problemId: problemId,
             content
         }).save();
 
@@ -159,7 +158,7 @@ router.get('/:problemId/answer', async function (req: Request, res: Response) {
             return sendErrorResponse(res, 404, 'problem_not_exists');
 
         const answer = await db.Answer.find({
-            problemId: problem._id
+            problemId: problemId
         });
 
         res.json(answer);

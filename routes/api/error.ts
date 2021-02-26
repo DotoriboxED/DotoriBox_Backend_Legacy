@@ -13,6 +13,7 @@ const errTexts: any = {
     'choice_not_exists': '보기가 존재하지 않습니다.',
     'image_not_exists': '이미지가 존재하지 않습니다.',
     'pc_not_exists': '문제 혹은 보기가 존재하지 않습니다.',
+    'product_not_exists': '제품이 존재하지 않습니다.',
 
     'number_already_exists': '이미 존재하는 번호입니다.',
     'survey_already_exists': '설문지가 이미 존재합니다.',
@@ -20,9 +21,13 @@ const errTexts: any = {
     
     'problem_not_deleted': '삭제된 문제가 아니거나 존재하지 않는 문제입니다.',
 
+    'user_blocked': '차단된 사용자입니다.',
+    'password_wrong': '잘못된 비밀번호입니다.',
+
     'not_admin': '관리자가 아닙니다.',
     'less_level': '권한이 부족합니다.',
-    'invalid_input': '잘못된 입력입니다.'
+    'invalid_input': '잘못된 입력입니다.',
+    'no_input': '입력값이 없습니다.'
 }
 
 function sendErrorResponse(res: Response, statusCode: number, errText: string, err?: Error) {

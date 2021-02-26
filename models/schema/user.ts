@@ -38,6 +38,10 @@ export default function () {
         },
         phoneNum: {
             type: String
+        },
+        userType: {
+            type: String,
+            required: true
         }
     });
 

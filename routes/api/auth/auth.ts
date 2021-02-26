@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import path from 'path';
 import qs from 'qs';
+import sendErrorResponse from '../error';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') })
 
@@ -41,7 +42,8 @@ router.post('/signup/local', async function (req: Request, res: Response) {
 
     try {
         const userCheck = await db.User.findOne({
-            email
+            email,
+            userType: 'local'
         });
 
         if (userCheck)
@@ -54,7 +56,8 @@ router.post('/signup/local', async function (req: Request, res: Response) {
             password: cryptPassword,
             email,
             isMan,
-            Birthday
+            Birthday,
+            userType: 'local'
         });
 
         res.sendStatus(200);
@@ -96,7 +99,8 @@ router.post('/login/kakao/token', async function (req: Request, res: Response) {
         const { email } = data.data.kakao_account;
 
         let user: any = await db.User.findOne({
-            email
+            email,
+            userType: 'kakao'
         });
 
         if (!user) {
@@ -108,7 +112,8 @@ router.post('/login/kakao/token', async function (req: Request, res: Response) {
                 email,
                 isMan,
                 profilePic: data.data.properties.profile_image,
-                Birthday: '1998-12-04'
+                Birthday: '1998-12-04',
+                userType: 'kakao'
             });
 
             user = await db.User.findOne({
@@ -117,7 +122,7 @@ router.post('/login/kakao/token', async function (req: Request, res: Response) {
         }
 
         if (user.isBlocked)
-            return res.status(403).send('접근이 제한된 계정입니다.');
+            return sendErrorResponse(res, 403, 'user_blocked');
 
         const payload = {
             _id: user?._id,
@@ -172,7 +177,8 @@ router.post('/login/naver/token', async function (req: Request, res: Response) {
         const { profile_image, gender, email, mobile, name } = userData.data.response;
 
         let user: any = await db.User.findOne({
-            email
+            email,
+            userType: 'naver'
         });
 
         if (!user) {
@@ -186,7 +192,8 @@ router.post('/login/naver/token', async function (req: Request, res: Response) {
                 isMan,
                 phoneNum: mobile,
                 profilePic: profile_image,
-                Birthday: '1998-12-04'
+                Birthday: '1998-12-04',
+                userType: 'naver'
             });
 
             user = await db.User.find({
@@ -195,7 +202,7 @@ router.post('/login/naver/token', async function (req: Request, res: Response) {
         }
 
         if (user.isBlocked)
-            return res.status(403).send('접근이 제한된 계정입니다.');
+            return sendErrorResponse(res, 403, 'user_blocked');
 
         const payload = {
             _id: user?._id,
@@ -253,7 +260,8 @@ router.post('/login/google/token', async function (req: Request, res: Response) 
 
         
         let user: any = await db.User.findOne({
-            email
+            email,
+            userType: 'google'
         });
 
         if (!user) {
@@ -262,7 +270,8 @@ router.post('/login/google/token', async function (req: Request, res: Response) 
                 name,
                 profilePic: picture,
                 Birthday: '1998-12-04',
-                isMan: true
+                isMan: true,
+                userType: 'google'
             });
 
             user = await db.User.find({
@@ -271,7 +280,7 @@ router.post('/login/google/token', async function (req: Request, res: Response) 
         }
         
         if (user.isBlocked)
-            return res.status(403).send('접근이 제한된 계정입니다.');
+            return sendErrorResponse(res, 403, 'user_blocked');
 
         const payload = {
             _id: user?._id,
@@ -294,15 +303,16 @@ router.post('/login/local', async function (req: Request, res: Response) {
 
     try {
         const user: any = await db.User.findOne({
-            email
+            email,
+            userType: 'local'
         });
 
         const comparePassword = bcrypt.compareSync(user.password, password);
 
         if (comparePassword)
-            return res.status(403).send('비밀번호가 다릅니다.');
+            return sendErrorResponse(res, 403, 'password_wrong');
         if (user.isBlocked)
-            return res.status(403).send('제한된 사용자입니다.');
+            return sendErrorResponse(res, 403, 'user_blocked');
 
         const payload = {
             _id: user._id,

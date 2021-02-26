@@ -79,7 +79,7 @@ export default function (autoIncrement: any) {
     });
     
     const answer = new mongoose.Schema({
-        problemId: mongoose.Schema.Types.ObjectId,
+        problemId: Number,
         content: mongoose.Schema.Types.Mixed
     });
     
