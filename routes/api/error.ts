@@ -18,6 +18,7 @@ const errTexts: any = {
     'number_already_exists': '이미 존재하는 번호입니다.',
     'survey_already_exists': '설문지가 이미 존재합니다.',
     'name_already_exists': '이미 존재하는 이름입니다.',
+    'account_already_exists': '이미 존재하는 가입 정보입니다.',
     
     'problem_not_deleted': '삭제된 문제가 아니거나 존재하지 않는 문제입니다.',
 

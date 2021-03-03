@@ -10,6 +10,17 @@ namespace Form {
         problemId?: string,
         content?: string
     }
+
+    export interface Response {
+        sucess: boolean,
+        message?: string,
+        code?: number
+    };
+
+    export interface Product {
+        name?: string,
+        stock?: number
+    }
 }
 
 export default Form;
