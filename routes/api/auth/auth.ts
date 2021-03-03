@@ -47,7 +47,7 @@ router.post('/signup/local', async function (req: Request, res: Response) {
         });
 
         if (userCheck)
-            return res.status(403).send('이미 존재하는 계정입니다.');
+            return sendErrorResponse(res, 403, 'user_already_exists');
 
         const cryptPassword = bcrypt.hashSync(password, 7);
 
@@ -71,21 +71,21 @@ router.post('/login/kakao', async function (req: Request, res: Response) {
     const queryStr = qs.stringify({
         response_type: 'code',
         client_id: process.env.KAKAO_REST_KEY,
-        redirect_uri: 'http://localhost:3000/api/auth/signup/kakao/callback'
+        redirect_uri: 'http://localhost:3000/api/auth/login/kakao/callback'
     });
 
     res.redirect(AUTHORIZE_URI + queryStr);
 });
 
-router.post('/login/kakao/token', async function (req: Request, res: Response) {
-    const { code } = req.body;
+router.get('/login/kakao/callback', async function (req: Request, res: Response) {
+    const { code } = req.query;
 
     try {
         const token = await axios.post('https://kauth.kakao.com/oauth/token', {}, {
             params: {
                 grant_type: 'authorization_code',
                 client_id: process.env.KAKAO_REST_KEY,
-                redirect_uri: 'http://localhost:3000/api/auth/signup/kakao/callback',
+                redirect_uri: 'http://localhost:3000/api/auth/login/kakao/callback',
                 code: code
             }
         });
@@ -153,8 +153,8 @@ router.post('/login/naver', async function (req: Request, res: Response) {
     res.redirect(AUTHORIZE_URI + queryStr);
 });
 
-router.post('/login/naver/token', async function (req: Request, res: Response) {
-    const { code, state } = req.body;
+router.get('/login/naver/callback', async function (req: Request, res: Response) {
+    const { code, state } = req.query;
 
     try {
         const token = await axios.post('https://nid.naver.com/oauth2.0/token', {}, {
@@ -233,7 +233,7 @@ router.post('/login/google', async function(req: Request, res: Response) {
     res.redirect(AUTHORIZE_URI + '?' + queryStr);
 });
 
-router.post('/login/google/token', async function (req: Request, res: Response) {
+router.get('/login/google/callback', async function (req: Request, res: Response) {
     const { code, scope } = req.query;
 
     try {
@@ -298,7 +298,7 @@ router.post('/login/google/token', async function (req: Request, res: Response) 
     }
 });
 
-router.post('/login/local', async function (req: Request, res: Response) {
+router.get('/login/local', async function (req: Request, res: Response) {
     const { password, email } = req.body;
 
     try {
