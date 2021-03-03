@@ -62,7 +62,7 @@ router.post('/signup/local', async function (req: Request, res: Response) {
 
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500 ,'unknown_error', err);
     }
 });
 
@@ -99,9 +99,11 @@ router.get('/login/kakao/callback', async function (req: Request, res: Response)
         const { email } = data.data.kakao_account;
 
         let user: any = await db.User.findOne({
-            email,
-            userType: 'kakao'
+            email
         });
+
+        if (user && user.userType != 'kakao')
+            return sendErrorResponse(res, 403, 'account_already_exists');
 
         if (!user) {
             let isMan;
@@ -136,8 +138,7 @@ router.get('/login/kakao/callback', async function (req: Request, res: Response)
         };
         res.json(response);
     } catch (err) {
-        console.log(err);
-        res.status(500).send(err);
+        sendErrorResponse(res, 500 ,'unknown_error', err);
     }
 });
 
@@ -177,9 +178,11 @@ router.get('/login/naver/callback', async function (req: Request, res: Response)
         const { profile_image, gender, email, mobile, name } = userData.data.response;
 
         let user: any = await db.User.findOne({
-            email,
-            userType: 'naver'
+            email
         });
+
+        if (user && user.userType != 'naver')
+            return sendErrorResponse(res, 403, 'account_already_exists');
 
         if (!user) {
             let isMan = false;
@@ -196,7 +199,7 @@ router.get('/login/naver/callback', async function (req: Request, res: Response)
                 userType: 'naver'
             });
 
-            user = await db.User.find({
+            user = await db.User.findOne({
                 email
             });
         }
@@ -216,7 +219,7 @@ router.get('/login/naver/callback', async function (req: Request, res: Response)
         };
         res.json(response);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500 ,'unknown_error', err);
     }
 });
 
@@ -260,9 +263,11 @@ router.get('/login/google/callback', async function (req: Request, res: Response
 
         
         let user: any = await db.User.findOne({
-            email,
-            userType: 'google'
+            email
         });
+
+        if (user && user.userType != 'google')
+            return sendErrorResponse(res, 403, 'account_already_exists');
 
         if (!user) {
             await db.User.create({
@@ -274,7 +279,7 @@ router.get('/login/google/callback', async function (req: Request, res: Response
                 userType: 'google'
             });
 
-            user = await db.User.find({
+            user = await db.User.findOne({
                 email
             });
         }
@@ -294,7 +299,7 @@ router.get('/login/google/callback', async function (req: Request, res: Response
         };
         res.json(response);
     } catch (err) {
-        res.status(500).send(err);
+        sendErrorResponse(res, 500 ,'unknown_error', err);
     }
 });
 
@@ -303,9 +308,11 @@ router.get('/login/local', async function (req: Request, res: Response) {
 
     try {
         const user: any = await db.User.findOne({
-            email,
-            userType: 'local'
+            email
         });
+        
+        if (user && user.userType != 'local')
+            return sendErrorResponse(res, 403, 'account_already_exists');
 
         const comparePassword = bcrypt.compareSync(user.password, password);
 
@@ -326,8 +333,7 @@ router.get('/login/local', async function (req: Request, res: Response) {
         };
         res.json(response);
     } catch (err) {
-        console.log(err);
-        res.status(500).send(err);
+        sendErrorResponse(res, 500 ,'unknown_error', err);
     }
 });
 
