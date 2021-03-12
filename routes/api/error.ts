@@ -22,6 +22,8 @@ const errTexts: any = {
     
     'problem_not_deleted': '삭제된 문제가 아니거나 존재하지 않는 문제입니다.',
 
+    'no_stock': '재고가 모두 소진되었습니다.',
+
     'user_blocked': '차단된 사용자입니다.',
     'password_wrong': '잘못된 비밀번호입니다.',
 

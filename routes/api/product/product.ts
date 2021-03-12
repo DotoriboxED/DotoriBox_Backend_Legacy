@@ -26,7 +26,7 @@ router.post('/', async (req: Request, res: Response) => {
     } catch (err) {
         sendErrorResponse(res, 500, 'unknown_error', err);
     }
-})
+});
 
 router.get('/', authChecker,  async (req: Request, res: Response) => {
     const { isDeleted } = req.query;
@@ -51,7 +51,7 @@ router.get('/', authChecker,  async (req: Request, res: Response) => {
     } catch (err) {
         sendErrorResponse(res, 500, 'unknown_error', err);
     }
-})
+});
 
 router.get('/:productId', async (req: Request, res: Response) => {
     const { productId } = req.params;
@@ -94,7 +94,7 @@ router.put('/:productId', async (req: Request, res: Response) => {
     }
 });
 
-router.put('/:produectId/recover', async (req: Request, res: Response) => {
+router.put('/:productId/recover', async (req: Request, res: Response) => {
     const { productId } = req.params;
 
     try {
@@ -116,7 +116,34 @@ router.put('/:produectId/recover', async (req: Request, res: Response) => {
     } catch (err) {
         sendErrorResponse(res, 500, 'unknown_error', err);
     }
-})
+});
+
+router.put('/:productId/use', async (req: Request, res: Response) => {
+    const { productId } = req.params;
+
+    try {
+        const product: any = await db.Product.findOne({
+            id: productId,
+            isDeleted: false
+        });
+
+        if (product.stock === 0)
+            return sendErrorResponse(res, 400, 'no_stock');
+        
+        await db.Product.updateOne({
+            id: productId,
+            isDeleted: false
+        }, {
+            $inc: {
+                stock: -1
+            }
+        });
+
+        res.sendStatus(200);
+    } catch (err) {
+        sendErrorResponse(res, 500, 'unknown_error', err);
+    }
+});
 
 router.delete('/:productId', async (req: Request, res: Response) => {
     const { productId } = req.params;
