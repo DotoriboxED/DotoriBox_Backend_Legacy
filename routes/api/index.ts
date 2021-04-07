@@ -1,7 +1,7 @@
 import express from 'express';
 import survey from './survey/index';
 import auth from './auth/auth';
-import product from './product/index';
+import product from './sample/index';
 
 const router = express.Router();
 

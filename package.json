@@ -31,8 +31,8 @@
     "passport-jwt": "^4.0.0",
     "passport-kakao": "^1.0.0",
     "passport-local": "^1.0.0",
-    "pm2": "^4.5.1",
-    "pug": "^3.0.0",
+    "pm2": "^4.5.5",
+    "pug": "^3.0.2",
     "uuid4": "^2.0.2"
   },
   "devDependencies": {

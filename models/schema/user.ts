@@ -5,16 +5,6 @@ export default function () {
         name: {
             type: String
         },
-        password: {
-            type: String
-        },
-        level: {
-            type: Number,
-            default: 1,
-            required: true,
-            min: 1,
-            max: 30
-        },
         isBlocked: {
             type: Boolean,
             required: true,
@@ -29,12 +19,13 @@ export default function () {
             type: Boolean,
             required: true
         },
+        isAdmin: {
+            type: Boolean,
+            default: false
+        },
         Birthday: {
             type: Date,
             required: true
-        },
-        profilePic: {
-            type: String
         },
         phoneNum: {
             type: String

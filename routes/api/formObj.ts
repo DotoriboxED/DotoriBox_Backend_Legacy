@@ -17,7 +17,7 @@ namespace Form {
         code?: number
     };
 
-    export interface Product {
+    export interface Sample {
         name?: string,
         stock?: number
     }
