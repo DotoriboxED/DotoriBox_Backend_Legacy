@@ -6,7 +6,7 @@ import db from '../../../models';
 import tool from '../tool';
 import form from '../formObj'
 import sendErrorResponse from '../error';
-import { unlink } from 'fs/promises';
+import { promises } from 'fs';
 
 const router = express.Router();
 
@@ -421,7 +421,7 @@ router.post('/:problemId/choice/:choiceNum/pic',
             });
 
             if (!picture) {
-                await unlink('./uploads/' + filename);
+                await promises.unlink('./uploads/' + filename);
                 return sendErrorResponse(res, 404, 'pc_not_exists');
             }
 
@@ -430,7 +430,7 @@ router.post('/:problemId/choice/:choiceNum/pic',
             });
 
             if (!survey || survey.isDeleted) {
-                await unlink('./uploads/' + filename);
+                await promises.unlink('./uploads/' + filename);
                 return sendErrorResponse(res, 404, 'survey_not_exists');
             }
 
@@ -505,7 +505,7 @@ router.put('/:problemId/choice/:choiceNum/pic',
             });
 
             if (!picture) {
-                await unlink('./uploads/' + filename);
+                await promises.unlink('./uploads/' + filename);
                 return sendErrorResponse(res, 404, 'pc_not_exists');
             }
 
@@ -514,11 +514,11 @@ router.put('/:problemId/choice/:choiceNum/pic',
             });
 
             if (!survey || survey.isDeleted) {
-                await unlink('./uploads/' + filename);
+                await promises.unlink('./uploads/' + filename);
                 return sendErrorResponse(res, 404, 'survey_not_exists');
             }
 
-            await unlink('./uploads/' + picture.choice[0].image);
+            await promises.unlink('./uploads/' + picture.choice[0].image);
 
             await db.Problem.updateOne({
                 'id': problemId,
@@ -559,7 +559,7 @@ router.delete('/:problemId/choice/:choiceNum/pic', async function (req: Request,
         if (!survey || survey.isDeleted)
             return sendErrorResponse(res, 404, 'survey_not_exists');
 
-        await unlink('./uploads/' + picture.choice[0].image);
+        await promises.unlink('./uploads/' + picture.choice[0].image);
 
         await db.Problem.updateOne({
             'id': problemId,
