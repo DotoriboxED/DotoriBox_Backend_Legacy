@@ -6,7 +6,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import surveySchema from './schema/survey';
 import userSchema from './schema/user';
-import productSchema from './schema/sample';
+import sampleSchema from './schema/sample';
+import productSchema from './schema/product';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') })
 
@@ -14,10 +15,14 @@ dotenv.config({ path: path.join(process.cwd(), '.env') })
 mongoose.connect(process.env.MONGO_URI as string, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB Connected'))
     .catch(err => console.log(err));
-
+mongoose.set('useCreateIndex', true);
 autoIncrement.initialize(mongoose.connection);
 
 // const surveySchema = require('./schema/survey')(mongoose, autoIncrement);
-const db = {...surveySchema(autoIncrement), ...userSchema(), ...productSchema(autoIncrement)};
+const db = {...surveySchema(autoIncrement), 
+    ...userSchema(), 
+    ...sampleSchema(autoIncrement),
+    ...productSchema(autoIncrement)
+};
 
 export default db;
