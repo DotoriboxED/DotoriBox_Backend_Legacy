@@ -33,6 +33,9 @@ export default function () {
         userType: {
             type: String,
             required: true
+        },
+        password: {
+            type: String
         }
     });
 

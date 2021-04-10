@@ -13,6 +13,16 @@ export default (autoIncrement: any) => {
             type: Number,
             required: true
         },
+        image: {
+            type: String
+        },
+        link: {
+            type: String,
+            required: true
+        },
+        content: {
+            type: String
+        },
         isDeleted: {
             type: Boolean,
             default: false
