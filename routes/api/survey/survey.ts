@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import passport from 'passport';
 import db from '../../../models';
 import authCheck from '../auth/authChecker';
-import sendErrorResponse from '../error';
+import sendErrorResponse from '../tools/error';
 const router = express.Router();
 
 /**
@@ -60,7 +60,7 @@ const router = express.Router();
 router.post('/', authCheck, async function (req: Request, res: Response) {
     const name: string = req.body.name;
 
-    if (!req.user || req.user.level < 30)
+    if (!req.user || !req.user.isAdmin)
         return sendErrorResponse(res, 403, 'less_level');
 
     if (!name)

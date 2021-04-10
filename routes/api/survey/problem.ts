@@ -3,9 +3,9 @@ import multer from 'multer';
 import path from 'path';
 import uuid from 'uuid';
 import db from '../../../models';
-import tool from '../tool';
-import form from '../formObj'
-import sendErrorResponse from '../error';
+import tool from '../tools/tool';
+import form from '../tools/formObj'
+import sendErrorResponse from '../tools/error';
 import { promises } from 'fs';
 
 const router = express.Router();

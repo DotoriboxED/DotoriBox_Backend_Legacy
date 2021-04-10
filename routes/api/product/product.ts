@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import db from '../../../models/index'
-import sendErrorResponse from '../error';
+import sendErrorResponse from '../tools/error';
 
 const router = Router();
 
