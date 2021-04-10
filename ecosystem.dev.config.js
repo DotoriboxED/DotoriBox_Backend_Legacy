@@ -7,7 +7,7 @@ module.exports = {
         instances: 1, // 설치될 앱 인스턴스가 갯수
         autorestart: true, // 앱 크러쉬 등으로 인해 앱이 종료될 때 재시작할지 여부 (default: true)
         watch: false, // 폴더 내의 파일에 변경이 있을때, 앱이 리로딩 여부
-        ignore_watch: ["logs", "node_modules"],
+        ignore_watch: ["logs", "node_modules", "uploads"],
         max_memory_restart: '1G',
         env: { // 앱의 env를 설정
             NODE_ENV: 'development'
