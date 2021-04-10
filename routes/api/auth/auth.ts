@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import path from 'path';
 import qs from 'qs';
-import sendErrorResponse from '../error';
+import sendErrorResponse from '../tools/error';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') })
 
@@ -128,7 +128,7 @@ router.get('/login/kakao/callback', async function (req: Request, res: Response)
 
         const payload = {
             _id: user?._id,
-            level: user?.level
+            level: user?.isAdmin
         };
 
         const userToken = await jwt.sign(payload, 'dotori', { expiresIn: 3600 });
@@ -209,7 +209,7 @@ router.get('/login/naver/callback', async function (req: Request, res: Response)
 
         const payload = {
             _id: user?._id,
-            level: user?.level
+            level: user?.isAdmin
         };
 
         const userToken = await jwt.sign(payload, 'dotori', { expiresIn: 3600 });
@@ -289,7 +289,7 @@ router.get('/login/google/callback', async function (req: Request, res: Response
 
         const payload = {
             _id: user?._id,
-            level: user?.level
+            level: user?.isAdmin
         };
 
         const userToken = await jwt.sign(payload, 'dotori', { expiresIn: 3600 });
@@ -323,7 +323,7 @@ router.get('/login/local', async function (req: Request, res: Response) {
 
         const payload = {
             _id: user._id,
-            level: user.level
+            level: user.isAdmin
         };
 
         const token = await jwt.sign(payload, 'dotori', { expiresIn: 3600 });
