@@ -1,39 +1,86 @@
 import { Router, Request, Response } from 'express';
-import sendErrorResponse from '../error';
-import Form from '../formObj';
+import multer from 'multer';
+import path from 'path';
+import uuid from 'uuid';
+import sendErrorResponse from '../tools/error';
+import Form from '../tools/formObj';
 import db from '../../../models/index';
 import authChecker from '../auth/authChecker';
+import { PathLike, promises } from 'fs';
+
 const router = Router();
 
-router.post('/', async (req: Request, res: Response) => {
-    const { productName } = req.body;
-
-    try {
-        const duplicate = await db.Sample.findOne({
-            name: productName,
-            isDeleted: false
-        });
-
-        if (duplicate)
-            return sendErrorResponse(res, 403, 'name_already_exists');
-
-        await db.Sample.create({
-            name: productName,
-            stock: 0
-        });
-
-        return res.sendStatus(200);
-    } catch (err) {
-        sendErrorResponse(res, 500, 'unknown_error', err);
+const storage = multer.diskStorage({
+    destination: function (req: Request, file: Express.Multer.File, cb: Function) {
+        cb(null, 'uploads/sample/')
+    },
+    filename: function (req: Request, file: Express.Multer.File, cb: Function) {
+        cb(null, req.newFileName + path.extname(file.originalname));
     }
 });
 
-router.get('/', authChecker,  async (req: Request, res: Response) => {
+function fileFilter(res: Request, file: Express.Multer.File, cb: Function) {
+    const extension: string = file.mimetype.split('/')[0];
+
+    if (extension === 'image') //Check && Upload...
+        return cb(null, true);
+
+    return cb(new Error('업로드를 지원하지 않는 형식의 파일입니다.'), false);
+}
+
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter
+});
+
+router.post('/',
+    authChecker,
+    function (req: Request, file: object, next: Function) {
+        req.newFileName = uuid.v4();
+        next();
+    },
+    upload.single('attachment'),
+    async (req: Request, res: Response) => {
+        const { name, stock, link, content } = req.body;
+        const image = req.newFileName + path.extname(req.file.originalname);
+
+        if (!req.user || !req.user.isAdmin) {
+            promises.unlink(image);
+            return sendErrorResponse(res, 403, 'not_admin');
+        }
+
+        if (!name || !stock || !link || !content || !req.file)
+            return sendErrorResponse(res, 400, 'no_input');
+
+        try {
+            const duplicate = await db.Sample.findOne({
+                name,
+                isDeleted: false
+            });
+
+            if (duplicate)
+                return sendErrorResponse(res, 403, 'name_already_exists');
+
+            await db.Sample.create({
+                name,
+                stock,
+                image,
+                link,
+                content
+            });
+
+            return res.sendStatus(201);
+        } catch (err) {
+            sendErrorResponse(res, 500, 'unknown_error', err);
+        }
+    });
+
+router.get('/', authChecker, async (req: Request, res: Response) => {
     const { isDeleted } = req.query;
 
     try {
         if (isDeleted) {
-            if (req.user === undefined || req.user.level < 30)
+            if (req.user === undefined || !req.user.isAdmin)
                 return sendErrorResponse(res, 403, 'less_level');
 
             const products = await db.Sample.find({
@@ -71,28 +118,64 @@ router.get('/:productId', async (req: Request, res: Response) => {
     }
 });
 
-router.put('/:productId', async (req: Request, res: Response) => {
+router.get('/:productId/image', async (req: Request, res: Response) => {
     const { productId } = req.params;
-    const { productName, stock } = req.body;
-    const product: Form.Sample = {};
-
-    if (productName) product.name = productName;
-    if (stock) product.stock = stock;
-
-    if (!productName && !stock)
-        sendErrorResponse(res, 400, 'no_input');
 
     try {
-        await db.Sample.updateOne({
+        const product: any = await db.Sample.findOne({
             id: productId,
             isDeleted: false
-        }, product);
+        });
 
-        res.sendStatus(200);
+        if (!product)
+            return sendErrorResponse(res, 404, 'product_not_exists');
+
+        res.download('./uploads/sample/' + product.image);
     } catch (err) {
         sendErrorResponse(res, 500, 'unknown_error', err);
     }
 });
+
+router.put('/:productId',
+    authChecker,
+    function (req: Request, file: object, next: Function) {
+        req.newFileName = uuid.v4();
+        next();
+    },
+    upload.single('attachment'),
+    async (req: Request, res: Response) => {
+        const { productId } = req.params;
+        const { name, stock, link, content } = req.body;
+        const product: Record<string, unknown> = {};
+
+        let image;
+
+        if (req.file)
+            image = req.newFileName + path.extname(req.file.originalname);
+
+        if (!req.user || !req.user.isAdmin) {
+            if (image)
+                promises.unlink(image as PathLike);
+            return sendErrorResponse(res, 403, 'not_admin');
+        }
+
+        if (name) product.name = name;
+        if (stock) product.stock = stock;
+        if (image) product.image = image;
+        if (link) product.link = link;
+        if (content) product.content = content; 
+
+        try {
+            await db.Sample.updateOne({
+                id: productId,
+                isDeleted: false
+            }, product);
+
+            res.sendStatus(200);
+        } catch (err) {
+            sendErrorResponse(res, 500, 'unknown_error', err);
+        }
+    });
 
 router.put('/:productId/recover', async (req: Request, res: Response) => {
     const { productId } = req.params;
@@ -129,7 +212,7 @@ router.put('/:productId/use', async (req: Request, res: Response) => {
 
         if (product.stock === 0)
             return sendErrorResponse(res, 400, 'no_stock');
-        
+
         await db.Sample.updateOne({
             id: productId,
             isDeleted: false
@@ -147,7 +230,7 @@ router.put('/:productId/use', async (req: Request, res: Response) => {
 
 router.delete('/:productId', async (req: Request, res: Response) => {
     const { productId } = req.params;
-    
+
     try {
         const check = await db.Sample.find({
             id: productId,
