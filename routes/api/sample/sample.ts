@@ -42,6 +42,10 @@ router.post('/',
     upload.single('attachment'),
     async (req: Request, res: Response) => {
         const { name, stock, link, content } = req.body;
+
+        if (!req.file)
+            return sendErrorResponse(res, 400, 'image_not_exists');
+
         const image = req.newFileName + path.extname(req.file.originalname);
 
         if (!req.user || !req.user.isAdmin) {
