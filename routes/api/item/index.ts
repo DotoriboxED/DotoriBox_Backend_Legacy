@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import product from './sample';
+import product from './item';
 const router = Router();
 
 router.use('/', product);

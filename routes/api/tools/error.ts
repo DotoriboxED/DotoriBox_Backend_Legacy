@@ -14,6 +14,7 @@ const errTexts: any = {
     'image_not_exists': '이미지가 존재하지 않습니다.',
     'pc_not_exists': '문제 혹은 보기가 존재하지 않습니다.',
     'product_not_exists': '제품이 존재하지 않습니다.',
+    'item_not_exists': '제품이 존재하지 않습니다.',
 
     'number_already_exists': '이미 존재하는 번호입니다.',
     'survey_already_exists': '설문지가 이미 존재합니다.',

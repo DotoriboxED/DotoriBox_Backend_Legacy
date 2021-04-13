@@ -12,7 +12,7 @@ const router = Router();
 
 const storage = multer.diskStorage({
     destination: function (req: Request, file: Express.Multer.File, cb: Function) {
-        cb(null, 'uploads/sample/')
+        cb(null, 'uploads/item/')
     },
     filename: function (req: Request, file: Express.Multer.File, cb: Function) {
         cb(null, req.newFileName + path.extname(file.originalname));
@@ -49,7 +49,7 @@ router.post('/',
         const image = req.newFileName + path.extname(req.file.originalname);
 
         if (!req.user || !req.user.isAdmin) {
-            promises.unlink(image);
+            promises.unlink('./uploads/item/' + image);
             return sendErrorResponse(res, 403, 'not_admin');
         }
 
@@ -133,7 +133,7 @@ router.get('/:productId/image', async (req: Request, res: Response) => {
         if (!product)
             return sendErrorResponse(res, 404, 'product_not_exists');
 
-        res.download('./uploads/sample/' + product.image);
+        res.download('./uploads/item/' + product.image);
     } catch (err) {
         sendErrorResponse(res, 500, 'unknown_error', err);
     }
@@ -158,7 +158,7 @@ router.put('/:productId',
 
         if (!req.user || !req.user.isAdmin) {
             if (image)
-                promises.unlink(image as PathLike);
+                promises.unlink('./uploads/item/' + image as PathLike);
             return sendErrorResponse(res, 403, 'not_admin');
         }
 
@@ -169,10 +169,17 @@ router.put('/:productId',
         if (content) product.content = content; 
 
         try {
-            await db.Item.updateOne({
+            const item: any = await db.Item.findOneAndUpdate({
                 id: productId,
                 isDeleted: false
             }, product);
+
+            if (item)
+                promises.unlink('./uploads/item/' + item.image);
+            else {
+                promises.unlink('./uploads/item/' + req.newFileName);
+                return sendErrorResponse(res, 404, 'item_not_exists');
+            }
 
             res.sendStatus(200);
         } catch (err) {
