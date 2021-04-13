@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import surveySchema from './schema/survey';
 import userSchema from './schema/user';
-import sampleSchema from './schema/sample';
+import itemSchema from './schema/sample';
 import productSchema from './schema/product';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') })
@@ -21,7 +21,7 @@ autoIncrement.initialize(mongoose.connection);
 // const surveySchema = require('./schema/survey')(mongoose, autoIncrement);
 const db = {...surveySchema(autoIncrement), 
     ...userSchema(), 
-    ...sampleSchema(autoIncrement),
+    ...itemSchema(autoIncrement),
     ...productSchema(autoIncrement)
 };
 

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 export default (autoIncrement: any) => {
-    const sampleSchema = new mongoose.Schema({
+    const itemSchema = new mongoose.Schema({
         id: {
             type: Number,
         },
@@ -25,16 +25,16 @@ export default (autoIncrement: any) => {
         }
     });
 
-    sampleSchema.plugin(autoIncrement.plugin, {
-        model: 'Sample',
+    itemSchema.plugin(autoIncrement.plugin, {
+        model: 'Item',
         field: 'id',
         startAt: 1,
         increment: 1
     });
 
-    const Sample = mongoose.model('Sample', sampleSchema);
+    const Item = mongoose.model('Item', itemSchema);
 
     return {
-        Sample
+        Item
     }
 }

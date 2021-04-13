@@ -57,7 +57,7 @@ router.post('/',
             return sendErrorResponse(res, 400, 'no_input');
 
         try {
-            const duplicate = await db.Sample.findOne({
+            const duplicate = await db.Item.findOne({
                 name,
                 isDeleted: false
             });
@@ -65,7 +65,7 @@ router.post('/',
             if (duplicate)
                 return sendErrorResponse(res, 403, 'name_already_exists');
 
-            await db.Sample.create({
+            await db.Item.create({
                 name,
                 image,
                 link,
@@ -86,13 +86,13 @@ router.get('/', authChecker, async (req: Request, res: Response) => {
             if (req.user === undefined || !req.user.isAdmin)
                 return sendErrorResponse(res, 403, 'less_level');
 
-            const products = await db.Sample.find({
+            const products = await db.Item.find({
                 isDeleted: true
             });
 
             res.json(products);
         } else {
-            const products = await db.Sample.find({
+            const products = await db.Item.find({
                 isDeleted: false
             });
 
@@ -107,7 +107,7 @@ router.get('/:productId', async (req: Request, res: Response) => {
     const { productId } = req.params;
 
     try {
-        const product = await db.Sample.findOne({
+        const product = await db.Item.findOne({
             id: productId,
             isDeleted: false
         });
@@ -125,7 +125,7 @@ router.get('/:productId/image', async (req: Request, res: Response) => {
     const { productId } = req.params;
 
     try {
-        const product: any = await db.Sample.findOne({
+        const product: any = await db.Item.findOne({
             id: productId,
             isDeleted: false
         });
@@ -169,7 +169,7 @@ router.put('/:productId',
         if (content) product.content = content; 
 
         try {
-            await db.Sample.updateOne({
+            await db.Item.updateOne({
                 id: productId,
                 isDeleted: false
             }, product);
@@ -184,7 +184,7 @@ router.put('/:productId/recover', async (req: Request, res: Response) => {
     const { productId } = req.params;
 
     try {
-        const product = await db.Sample.findOne({
+        const product = await db.Item.findOne({
             id: productId,
             isDeleted: false
         });
@@ -192,7 +192,7 @@ router.put('/:productId/recover', async (req: Request, res: Response) => {
         if (!product)
             return sendErrorResponse(res, 404, 'product_not_exists');
 
-        await db.Sample.updateOne({
+        await db.Item.updateOne({
             id: productId
         }, {
             isDeleted: false
@@ -208,7 +208,7 @@ router.delete('/:productId', async (req: Request, res: Response) => {
     const { productId } = req.params;
 
     try {
-        const check = await db.Sample.find({
+        const check = await db.Item.find({
             id: productId,
             isDeleted: false
         });
@@ -216,7 +216,7 @@ router.delete('/:productId', async (req: Request, res: Response) => {
         if (!check)
             return sendErrorResponse(res, 404, 'product_not_exists');
 
-        await db.Sample.updateOne({
+        await db.Item.updateOne({
             id: productId,
             isDeleted: false
         }, {
