@@ -41,7 +41,7 @@ router.post('/',
     },
     upload.single('attachment'),
     async (req: Request, res: Response) => {
-        const { name, stock, link, content } = req.body;
+        const { name, link, content } = req.body;
 
         if (!req.file)
             return sendErrorResponse(res, 400, 'image_not_exists');
@@ -53,7 +53,7 @@ router.post('/',
             return sendErrorResponse(res, 403, 'not_admin');
         }
 
-        if (!name || !stock || !link || !content || !req.file)
+        if (!name || !link || !content || !req.file)
             return sendErrorResponse(res, 400, 'no_input');
 
         try {
@@ -67,7 +67,6 @@ router.post('/',
 
             await db.Sample.create({
                 name,
-                stock,
                 image,
                 link,
                 content
@@ -197,33 +196,6 @@ router.put('/:productId/recover', async (req: Request, res: Response) => {
             id: productId
         }, {
             isDeleted: false
-        });
-
-        res.sendStatus(200);
-    } catch (err) {
-        sendErrorResponse(res, 500, 'unknown_error', err);
-    }
-});
-
-router.put('/:productId/use', async (req: Request, res: Response) => {
-    const { productId } = req.params;
-
-    try {
-        const product: any = await db.Sample.findOne({
-            id: productId,
-            isDeleted: false
-        });
-
-        if (product.stock === 0)
-            return sendErrorResponse(res, 400, 'no_stock');
-
-        await db.Sample.updateOne({
-            id: productId,
-            isDeleted: false
-        }, {
-            $inc: {
-                stock: -1
-            }
         });
 
         res.sendStatus(200);

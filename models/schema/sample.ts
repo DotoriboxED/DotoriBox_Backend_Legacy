@@ -9,10 +9,6 @@ export default (autoIncrement: any) => {
             type: String,
             required: true
         },
-        stock: {
-            type: Number,
-            required: true
-        },
         image: {
             type: String
         },
